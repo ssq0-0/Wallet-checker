@@ -1,0 +1,18 @@
+{
+    "threads":40,
+    "logger_level":"debug",
+    "checkers_params":{
+        "debank":{
+            "base_url":"https://api.debank.com",
+            "endpoints": {
+                "user_info":"/user?id=%s",
+                "used_chains":"/user/used_chains?id=%s",
+                "token_balance_list":"/token/balance_list?user_addr=%s&chain=%s",
+                "project_list":"/portfolio/project_list?user_addr=%s"
+            },
+            "rotate_proxy": true,
+            "proxy_file_path": "",
+            "deadline_request": 10
+        }
+    }
+}

@@ -1,3 +1,4 @@
+// Package checkers provides implementations for various balance checking services.
 package checkers
 
 import (
@@ -7,19 +8,28 @@ import (
 	"chief-checker/pkg/errors"
 )
 
-// Factory отвечает за создание экземпляров чекеров.
+// Factory is responsible for creating checker instances.
+// It ensures proper initialization of all dependencies and configurations.
 type Factory struct {
 	config *debankConfig.DebankConfig
 }
 
-// NewFactory создает новый экземпляр Factory.
+// NewFactory creates a new instance of Factory with the provided configuration.
+// It validates the configuration before creating the factory.
 func NewFactory(cfg *debankConfig.DebankConfig) *Factory {
 	return &Factory{
 		config: cfg,
 	}
 }
 
-// CreateDebank создает экземпляр Debank чекера.
+// CreateDebank creates a new instance of Debank checker.
+// It initializes all required dependencies:
+// - WASM client for signature generation
+// - ID generator for request identification
+// - Parameter generator for request parameters
+// - Memory cache for optimization
+//
+// Returns an error if any dependency initialization fails.
 func (f *Factory) CreateDebank() (*Debank, error) {
 	wasmClient, err := wasmClient.NewWasm()
 	if err != nil {

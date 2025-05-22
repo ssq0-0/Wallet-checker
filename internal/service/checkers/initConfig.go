@@ -1,3 +1,4 @@
+// Package checkers provides implementations for various balance checking services.
 package checkers
 
 import (
@@ -12,7 +13,15 @@ import (
 	"time"
 )
 
-// InitDebankConfig инициализирует конфиг для Debank чекера.
+// InitDebankConfig initializes the configuration for the Debank checker service.
+// It sets up all necessary components including HTTP client, proxy pool, and service endpoints.
+//
+// Parameters:
+// - cfg: Debank service settings from the application configuration
+//
+// Returns:
+// - *debankConfig.DebankConfig: initialized configuration
+// - error: if initialization fails
 func InitDebankConfig(cfg *appConfig.DebankSettings) (*debankConfig.DebankConfig, error) {
 	if ok, err := validateDebankParam(cfg); !ok {
 		return nil, err
@@ -48,7 +57,15 @@ func InitDebankConfig(cfg *appConfig.DebankSettings) (*debankConfig.DebankConfig
 	}, nil
 }
 
-// validateDebankParam валидирует параметры конфига Debank.
+// validateDebankParam validates the Debank configuration parameters.
+// It checks for required fields and their validity.
+//
+// Parameters:
+// - cfg: Debank service settings to validate
+//
+// Returns:
+// - bool: true if configuration is valid
+// - error: description of validation failure
 func validateDebankParam(cfg *appConfig.DebankSettings) (bool, error) {
 	if cfg == nil {
 		return false, errors.Wrap(errors.ErrValueEmpty, "debank settings is nil")
@@ -58,11 +75,20 @@ func validateDebankParam(cfg *appConfig.DebankSettings) (bool, error) {
 		cfg.BaseURL == "" ||
 		cfg.ContextDeadline == 0 ||
 		cfg.Endpoints == nil {
-		return false, errors.Wrap(errors.ErrValueEmpty, "proxy file path argument not find")
+		return false, errors.Wrap(errors.ErrValueEmpty, "required parameters not found")
 	}
 	return true, nil
 }
 
+// initProxies reads and parses the proxy list from a file.
+// It validates each proxy and returns a list of properly formatted proxy strings.
+//
+// Parameters:
+// - proxyFilePath: path to the file containing proxy list
+//
+// Returns:
+// - []string: list of validated proxy strings
+// - error: if reading or parsing fails
 func initProxies(proxyFilePath string) ([]string, error) {
 	proxylist, err := utils.ReadProxyList(proxyFilePath)
 	if err != nil {
@@ -82,7 +108,15 @@ func initProxies(proxyFilePath string) ([]string, error) {
 	return proxies, nil
 }
 
-// initProxyPool создает пул прокси из файла.
+// initProxyPool creates a proxy pool from a list of proxies in a file.
+// The pool manages proxy rotation and availability.
+//
+// Parameters:
+// - proxyFilePath: path to the file containing proxy list
+//
+// Returns:
+// - proxyPool.ProxyPool: initialized proxy pool
+// - error: if initialization fails
 func initProxyPool(proxyFilePath string) (proxyPool.ProxyPool, error) {
 	proxylist, err := utils.ReadProxyList(proxyFilePath)
 	if err != nil {

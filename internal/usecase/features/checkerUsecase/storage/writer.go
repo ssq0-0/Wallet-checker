@@ -1,3 +1,4 @@
+// Package storage provides implementations for data persistence and error handling.
 package storage
 
 import (
@@ -8,30 +9,42 @@ import (
 	"sync"
 )
 
+// FileWriter provides thread-safe, buffered file writing capabilities.
+// It supports asynchronous writing through a worker goroutine and
+// implements proper cleanup on close.
 type FileWriter struct {
-	filename  string        // имя выходного файла
-	file      *os.File      // файловый дескриптор
-	buffer    *bufio.Writer // буферизованный writer для эффективной записи
-	mu        sync.Mutex    // мьютекс для синхронизации записи
-	writeChan chan []string // канал для асинхронной записи
-	closeChan chan struct{} // канал для сигнала о закрытии
-	errChan   chan error    // канал для передачи ошибок из горутины записи
-	closeOnce sync.Once     // гарантирует, что close выполняется только один раз
+	filename  string        // Name of the output file
+	file      *os.File      // File descriptor
+	buffer    *bufio.Writer // Buffered writer for efficient writing
+	mu        sync.Mutex    // Mutex for synchronizing write operations
+	writeChan chan []string // Channel for asynchronous writing
+	closeChan chan struct{} // Channel for signaling shutdown
+	errChan   chan error    // Channel for propagating worker errors
+	closeOnce sync.Once     // Ensures close is executed only once
 }
 
+// NewFileWriter creates a new file writer with buffered I/O.
+// It initializes a background worker for asynchronous writing.
+//
+// Parameters:
+// - filename: path to the output file
+//
+// Returns:
+// - interfaces.Writer: initialized writer
+// - error: if file creation fails
 func NewFileWriter(filename string) (interfaces.Writer, error) {
 	file, err := os.Create(filename)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create file")
 	}
 
-	buffer := bufio.NewWriterSize(file, 64*1024) // 64KB буфер
+	buffer := bufio.NewWriterSize(file, 64*1024) // 64KB buffer
 
 	w := &FileWriter{
 		filename:  filename,
 		file:      file,
 		buffer:    buffer,
-		writeChan: make(chan []string, 20), // буферизованный канал для снижения блокировок
+		writeChan: make(chan []string, 20), // Buffered channel to reduce blocking
 		closeChan: make(chan struct{}),
 		errChan:   make(chan error, 1),
 	}
@@ -40,6 +53,14 @@ func NewFileWriter(filename string) (interfaces.Writer, error) {
 	return w, nil
 }
 
+// Write writes multiple lines to the file.
+// It ensures thread safety and proper buffering of output.
+//
+// Parameters:
+// - lines: slice of strings to write
+//
+// Returns:
+// - error: if writing fails
 func (w *FileWriter) Write(lines []string) error {
 	if len(lines) == 0 {
 		return nil
@@ -70,6 +91,11 @@ func (w *FileWriter) Write(lines []string) error {
 	return nil
 }
 
+// Close finalizes writing and releases resources.
+// It ensures all buffered data is written and files are properly closed.
+//
+// Returns:
+// - error: if closing operations fail
 func (w *FileWriter) Close() error {
 	var err error
 
@@ -100,6 +126,8 @@ func (w *FileWriter) Close() error {
 	return err
 }
 
+// writeWorker is a background goroutine that handles asynchronous writing.
+// It processes write requests from the channel and handles shutdown signals.
 func (w *FileWriter) writeWorker() {
 	for {
 		select {

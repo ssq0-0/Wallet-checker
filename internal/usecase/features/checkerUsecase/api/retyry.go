@@ -1,3 +1,5 @@
+// Package api provides functionality for interacting with external APIs
+// with built-in retry mechanisms and error handling.
 package api
 
 import (
@@ -9,8 +11,22 @@ import (
 	"time"
 )
 
+// RetryableOperation represents a function that can be retried.
+// It returns a result of any type and an error.
 type RetryableOperation func() (interface{}, error)
 
+// retryFunc executes an operation with automatic retries on failure.
+// It implements exponential backoff with jitter for retry delays.
+//
+// Parameters:
+// - ctx: context for cancellation
+// - operation: name of the operation for logging
+// - address: address being processed
+// - fn: function to retry
+//
+// Returns:
+// - interface{}: result of the successful operation
+// - error: if all retries fail or context is cancelled
 func (c *DataCollector) retryFunc(ctx context.Context, operation string, address string, fn RetryableOperation) (interface{}, error) {
 	var lastError error
 

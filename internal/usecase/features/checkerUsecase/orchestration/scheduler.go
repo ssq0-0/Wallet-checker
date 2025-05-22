@@ -1,3 +1,4 @@
+// Package orchestration provides task scheduling and execution management.
 package orchestration
 
 import (
@@ -8,18 +9,27 @@ import (
 	"sync"
 )
 
-// TaskProcessor обрабатывает задачу для конкретного аккаунта и возвращает результат
+// TaskProcessor defines a function type that processes a single account task
+// and returns the processing results or an error.
 type TaskProcessor func(context.Context, *account.Account) ([]string, error)
 
-// TaskScheduler реализует интерфейс types.TaskScheduler
+// TaskSchedulerImpl implements the TaskScheduler interface for managing concurrent task execution.
+// It uses an adaptive worker pool to efficiently process tasks and manage system resources.
 type TaskSchedulerImpl struct {
-	processor    TaskProcessor
-	threadsCount int
-	resultChan   chan []string
-	workerpool   *AdaptiveWorkerPool
+	processor    TaskProcessor       // function to process each task
+	threadsCount int                 // maximum number of concurrent threads
+	resultChan   chan []string       // channel for collecting results
+	workerpool   *AdaptiveWorkerPool // pool of workers for task execution
 }
 
-// NewTaskScheduler создает новый экземпляр планировщика задач
+// NewTaskScheduler creates a new task scheduler with the specified number of threads
+// and processing function.
+//
+// Parameters:
+// - threadsCount: maximum number of concurrent threads
+// - processor: function to process each task
+//
+// Returns an implementation of the TaskScheduler interface.
 func NewTaskScheduler(threadsCount int, processor TaskProcessor) interfaces.TaskScheduler {
 	return &TaskSchedulerImpl{
 		processor:    processor,
@@ -28,7 +38,13 @@ func NewTaskScheduler(threadsCount int, processor TaskProcessor) interfaces.Task
 	}
 }
 
-// Schedule планирует задачи для выполнения и возвращает канал с результатами
+// Schedule starts processing the provided accounts using the worker pool.
+// It distributes tasks among workers and returns a channel for collecting results.
+//
+// Parameters:
+// - accounts: slice of accounts to process
+//
+// Returns a channel that will receive processing results.
 func (s *TaskSchedulerImpl) Schedule(accounts []*account.Account) <-chan []string {
 	s.workerpool = NewAdaptiveWorkerPool(s.threadsCount, len(accounts), s.processAccount)
 
@@ -40,13 +56,21 @@ func (s *TaskSchedulerImpl) Schedule(accounts []*account.Account) <-chan []strin
 	return s.resultChan
 }
 
-// Wait ожидает завершения всех задач
+// Wait blocks until all scheduled tasks are completed.
+// It closes the result channel when all tasks are done.
 func (s *TaskSchedulerImpl) Wait() {
 	s.workerpool.Wait()
 	close(s.resultChan)
 }
 
-// processAccount обрабатывает задачу для конкретного аккаунта
+// processAccount handles the processing of a single account.
+// It executes the processor function and sends results to the result channel.
+//
+// Parameters:
+// - ctx: context for cancellation
+// - acc: account to process
+//
+// Returns an error if processing fails.
 func (s *TaskSchedulerImpl) processAccount(ctx context.Context, acc *account.Account) error {
 	result, err := s.processor(ctx, acc)
 	if err != nil {
@@ -61,7 +85,6 @@ func (s *TaskSchedulerImpl) processAccount(ctx context.Context, acc *account.Acc
 	return nil
 }
 
-// AdaptiveWorkerPool - воркер-пул с адаптивной емкостью
 type AdaptiveWorkerPool struct {
 	minWorkers  int
 	maxWorkers  int
@@ -74,7 +97,6 @@ type AdaptiveWorkerPool struct {
 	stopped       bool
 }
 
-// NewAdaptiveWorkerPool создает новый пул с адаптивным количеством рабочих
 func NewAdaptiveWorkerPool(minWorkers int, tasksCount int, processor func(context.Context, *account.Account) error) *AdaptiveWorkerPool {
 	maxWorkers := minWorkers * 2
 	if maxWorkers > tasksCount {
@@ -93,13 +115,11 @@ func NewAdaptiveWorkerPool(minWorkers int, tasksCount int, processor func(contex
 		activeWorkers: minWorkers,
 	}
 
-	// Запускаем минимальное количество рабочих
 	p.startWorkers(minWorkers)
 
 	return p
 }
 
-// Submit добавляет задачу в очередь на выполнение
 func (p *AdaptiveWorkerPool) Submit(task *account.Account) {
 	p.workersSync.Lock()
 	defer p.workersSync.Unlock()
@@ -108,40 +128,31 @@ func (p *AdaptiveWorkerPool) Submit(task *account.Account) {
 		return
 	}
 
-	// Проверяем, нужно ли добавить рабочих
 	queueSize := len(p.taskQueue)
 	if queueSize > p.activeWorkers && p.activeWorkers < p.maxWorkers {
-		// Добавляем рабочих, если очередь растет
 		workersToAdd := min(p.maxWorkers-p.activeWorkers, 5)
 		p.startWorkers(workersToAdd)
 		p.activeWorkers += workersToAdd
 	}
 
-	// Изменяем на неблокирующую запись в канал
 	select {
 	case p.taskQueue <- task:
-		// Задача успешно добавлена
 	default:
-		// Канал заполнен, запускаем новую горутину для добавления задачи
 		go func() {
 			p.taskQueue <- task
 		}()
 	}
 }
 
-// Wait ожидает завершения всех задач
 func (p *AdaptiveWorkerPool) Wait() {
-	// Закрываем канал задач, чтобы рабочие завершились
 	p.workersSync.Lock()
 	p.stopped = true
 	close(p.taskQueue)
 	p.workersSync.Unlock()
 
-	// Ждем завершения всех рабочих
 	p.workersDone.Wait()
 }
 
-// startWorkers запускает указанное количество рабочих
 func (p *AdaptiveWorkerPool) startWorkers(count int) {
 	for i := 0; i < count; i++ {
 		p.workersDone.Add(1)
@@ -149,24 +160,21 @@ func (p *AdaptiveWorkerPool) startWorkers(count int) {
 	}
 }
 
-// worker обрабатывает задачи из очереди
+// worker is a goroutine that processes tasks from the task queue.
+// It automatically scales down when there are no tasks to process.
 func (p *AdaptiveWorkerPool) worker() {
 	defer p.workersDone.Done()
 
 	ctx := context.Background()
 
 	for task := range p.taskQueue {
-		// Обрабатываем задачу
 		if err := p.processor(ctx, task); err != nil {
-			// logger.GlobalLogger.Errorf("Task processing error: %v", err)
+			// Error handling is delegated to the processor
 		}
 
-		// Проверяем, нужно ли уменьшить количество рабочих
 		p.workersSync.Lock()
 		queueSize := len(p.taskQueue)
 		if queueSize == 0 && p.activeWorkers > p.minWorkers {
-			// Если рабочий заметил, что очередь пуста и рабочих слишком много,
-			// он завершает свою работу
 			p.activeWorkers--
 			p.workersSync.Unlock()
 			return
@@ -175,7 +183,7 @@ func (p *AdaptiveWorkerPool) worker() {
 	}
 }
 
-// Вспомогательная функция min
+// min returns the smaller of two integers.
 func min(a, b int) int {
 	if a < b {
 		return a

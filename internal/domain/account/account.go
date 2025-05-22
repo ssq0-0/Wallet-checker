@@ -1,3 +1,4 @@
+// Package account provides domain entities and operations for managing blockchain accounts.
 package account
 
 import (
@@ -8,11 +9,26 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+// Account represents an Ethereum account with its address and optional private key.
+// It can be initialized either with just an address or with a private key from which
+// the address will be derived.
 type Account struct {
-	Address    common.Address
-	PrivateKey *ecdsa.PrivateKey
+	Address    common.Address    // Ethereum address
+	PrivateKey *ecdsa.PrivateKey // Optional private key (may be nil for address-only accounts)
 }
 
+// AccountFactory creates a slice of accounts from the provided data.
+// It supports different initialization types through the walletType parameter.
+//
+// Parameters:
+// - addressData: slice of strings containing either addresses or private keys
+// - walletType: type of initialization (with private key or address only)
+//
+// Returns:
+// - []*Account: slice of initialized accounts
+// - error: if initialization fails
+//
+// The function validates all inputs and ensures proper initialization based on the wallet type.
 func AccountFactory(addressData []string, walletType AccountDomainType) ([]*Account, error) {
 	if len(addressData) == 0 {
 		return nil, errors.Wrap(errors.ErrInvalidParams, "empty address data")
@@ -28,6 +44,15 @@ func AccountFactory(addressData []string, walletType AccountDomainType) ([]*Acco
 	}
 }
 
+// initWithPrivateKey creates accounts from private keys.
+// Each private key is parsed and used to derive its corresponding address.
+//
+// Parameters:
+// - addressData: slice of private keys in hex format
+//
+// Returns:
+// - []*Account: slice of accounts with both address and private key
+// - error: if any private key is invalid or address derivation fails
 func initWithPrivateKey(addressData []string) ([]*Account, error) {
 	if len(addressData) == 0 {
 		return nil, errors.Wrap(errors.ErrInvalidParams, "empty address data")
@@ -51,6 +76,17 @@ func initWithPrivateKey(addressData []string) ([]*Account, error) {
 	return accounts, nil
 }
 
+// initSimpleAddress creates accounts from either addresses or private keys.
+// For each input:
+// 1. Tries to parse it as a private key and derive the address
+// 2. If that fails, tries to parse it as an Ethereum address
+//
+// Parameters:
+// - addressData: slice of strings containing either addresses or private keys
+//
+// Returns:
+// - []*Account: slice of initialized accounts
+// - error: if any input is invalid or no accounts could be created
 func initSimpleAddress(addressData []string) ([]*Account, error) {
 	if len(addressData) == 0 {
 		return nil, errors.Wrap(errors.ErrInvalidParams, "empty address data")

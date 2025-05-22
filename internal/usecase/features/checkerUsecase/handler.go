@@ -1,3 +1,5 @@
+// Package checkerUsecase implements the business logic for checking account balances
+// across different blockchain services.
 package checkerUsecase
 
 import (
@@ -14,31 +16,63 @@ import (
 	"sync"
 )
 
+// CheckerHandler coordinates the checking of account balances and processing of results.
+// It manages the scheduling of tasks, aggregation of data, and writing of results and errors.
 type CheckerHandler struct {
-	scheduler      interfaces.TaskScheduler
-	aggregator     interfaces.DataAggregator
-	resultWriter   interfaces.Writer
-	errorWriter    interfaces.Writer
-	errorCollector interfaces.ErrorCollector
+	scheduler      interfaces.TaskScheduler  // Schedules and manages checking tasks
+	aggregator     interfaces.DataAggregator // Aggregates checking results
+	resultWriter   interfaces.Writer         // Writes successful results
+	errorWriter    interfaces.Writer         // Writes errors
+	errorCollector interfaces.ErrorCollector // Collects and manages errors
 
-	writeErr   error
-	writeErrMu sync.Mutex
+	writeErr   error      // Stores any write errors that occur
+	writeErrMu sync.Mutex // Protects writeErr from concurrent access
 }
 
+// DefaultCheckerFactory creates checker services based on configuration.
 type DefaultCheckerFactory struct {
-	config *appConfig.Checkers
+	config *appConfig.Checkers // Checker service configuration
 }
 
+// NewCheckerFactory creates a new instance of DefaultCheckerFactory.
+//
+// Parameters:
+// - config: configuration for checker services
+//
+// Returns:
+// - interfaces.CheckerFactory: factory instance for creating checkers
 func NewCheckerFactory(config *appConfig.Checkers) interfaces.CheckerFactory {
 	return &DefaultCheckerFactory{
 		config: config,
 	}
 }
 
+// CreateChecker creates a specific checker service by name.
+//
+// Parameters:
+// - name: name of the checker service to create
+//
+// Returns:
+// - service.Checker: initialized checker service
+// - error: if creation fails
 func (f *DefaultCheckerFactory) CreateChecker(name string) (service.Checker, error) {
 	return service.InitChecker(name, f.config)
 }
 
+// NewCheckerHandler creates a new instance of CheckerHandler.
+// It initializes the handler with accounts from the provided file and starts processing results.
+//
+// Parameters:
+// - addressesPath: path to file containing addresses to check
+// - scheduler: task scheduler for managing checking operations
+// - aggregator: data aggregator for collecting results
+// - resultWriter: writer for successful results
+// - errorWriter: writer for errors
+// - errorCollector: collector for error management
+//
+// Returns:
+// - *CheckerHandler: initialized handler
+// - error: if initialization fails
 func NewCheckerHandler(
 	addressesPath string,
 	scheduler interfaces.TaskScheduler,
@@ -72,6 +106,11 @@ func NewCheckerHandler(
 	return handler, nil
 }
 
+// Handle executes the main checking workflow.
+// It waits for all tasks to complete and writes final results and errors.
+//
+// Returns:
+// - error: if any operation fails during execution
 func (h *CheckerHandler) Handle() error {
 	h.scheduler.Wait()
 
@@ -110,6 +149,10 @@ func (h *CheckerHandler) Handle() error {
 	return nil
 }
 
+// writeGlobalStats writes aggregated statistics to the result writer.
+//
+// Returns:
+// - error: if writing fails
 func (h *CheckerHandler) writeGlobalStats() error {
 	globalStats := h.aggregator.GetGlobalStats()
 
@@ -126,6 +169,11 @@ func (h *CheckerHandler) writeGlobalStats() error {
 	return nil
 }
 
+// processResults processes checking results in batches.
+// It reads results from the channel and writes them in batches for efficiency.
+//
+// Parameters:
+// - results: channel providing checking results
 func (h *CheckerHandler) processResults(results <-chan []string) {
 	var batch [][]string
 	batchSize := types.BatchSize
@@ -143,6 +191,11 @@ func (h *CheckerHandler) processResults(results <-chan []string) {
 	}
 }
 
+// writeBatch writes a batch of results to the result writer.
+// If a write error occurs, it is stored for later handling.
+//
+// Parameters:
+// - batch: slice of result slices to write
 func (h *CheckerHandler) writeBatch(batch [][]string) {
 	var lines []string
 	for _, res := range batch {

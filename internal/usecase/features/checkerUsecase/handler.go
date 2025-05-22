@@ -113,7 +113,7 @@ func (h *CheckerHandler) Handle() error {
 func (h *CheckerHandler) writeGlobalStats() error {
 	globalStats := h.aggregator.GetGlobalStats()
 
-	formatter := processing.NewTextFormatter(0) // минимальная сумма не важна для глобальной статистики
+	formatter := processing.NewTextFormatter(0)
 	formattedStats, err := formatter.FormatGlobalStats(globalStats)
 	if err != nil {
 		return err

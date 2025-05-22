@@ -91,7 +91,6 @@ func (s *WasmClient) createInstance() (*WasmInstance, error) {
 
 	wasi_snapshot_preview1.MustInstantiate(instance.ctx, instance.runtime)
 
-	// env.iR и env.hNHD
 	_, err := instance.runtime.NewHostModuleBuilder("env").
 		NewFunctionBuilder().WithFunc(func() int32 { return 0 }).Export("iR").
 		NewFunctionBuilder().WithFunc(func() int32 { return 1 }).Export("hNHD").
@@ -100,7 +99,6 @@ func (s *WasmClient) createInstance() (*WasmInstance, error) {
 		return nil, fmt.Errorf("env module failed: %v", err)
 	}
 
-	// Декодируем и компилируем WASM
 	wasmBytes, err := base64.StdEncoding.DecodeString(pureWasmBase64)
 	if err != nil {
 		return nil, fmt.Errorf("decode wasm failed: %v", err)
@@ -111,16 +109,13 @@ func (s *WasmClient) createInstance() (*WasmInstance, error) {
 		return nil, fmt.Errorf("compile wasm failed: %v", err)
 	}
 
-	// Инстанцируем
 	instance.module, err = instance.runtime.InstantiateModule(instance.ctx, compiled, wazero.NewModuleConfig())
 	if err != nil {
 		return nil, fmt.Errorf("instantiate wasm failed: %v", err)
 	}
 
-	// Получаем память и функции
 	instance.memory = instance.module.Memory()
 
-	// Расширяем память сразу на 10 страниц (640KB)
 	if _, ok := instance.memory.Grow(10); !ok {
 		return nil, fmt.Errorf("memory grow failed")
 	}
@@ -132,12 +127,10 @@ func (s *WasmClient) createInstance() (*WasmInstance, error) {
 	instance.fnRS = instance.module.ExportedFunction("r_s")
 	instance.fnMkSF = instance.module.ExportedFunction("mk_s_f")
 
-	// Устанавливаем тип подписи
 	if _, err := instance.fnSetSignType.Call(instance.ctx, uint64(signTypeRegular)); err != nil {
 		return nil, fmt.Errorf("set_sign_type failed: %v", err)
 	}
 
-	// Инициализируем seed случайным значением
 	seed := time.Now().UnixNano()
 	if !instance.memory.Write(seedOffset, binary.LittleEndian.AppendUint64(nil, uint64(seed))) {
 		return nil, fmt.Errorf("failed to initialize random seed")
@@ -200,7 +193,6 @@ func (s *WasmClient) GenerateNonce() (string, error) {
 	}
 	defer s.releaseInstance(instance)
 
-	// Обновляем seed перед каждой генерацией
 	seed := time.Now().UnixNano()
 	if !instance.memory.Write(seedOffset, binary.LittleEndian.AppendUint64(nil, uint64(seed))) {
 		return "", fmt.Errorf("failed to update random seed")
@@ -260,7 +252,6 @@ func (s *WasmClient) MakeSignature(method, urlPath, queryString, nonce, tsStr st
 
 	logger.GlobalLogger.Debugf("[WASM] Making signature with instance #%d", instance.id)
 
-	// Выделяем память под все строки
 	type memBlock struct {
 		ptr  uint32
 		data []byte
@@ -273,7 +264,6 @@ func (s *WasmClient) MakeSignature(method, urlPath, queryString, nonce, tsStr st
 		{data: append([]byte(tsStr), 0)},
 	}
 
-	// Выделяем память и записываем данные
 	for i := range blocks {
 		ptr, err := s.malloc(instance, uint32(len(blocks[i].data)))
 		if err != nil {
@@ -290,14 +280,12 @@ func (s *WasmClient) MakeSignature(method, urlPath, queryString, nonce, tsStr st
 		}
 	}()
 
-	// Выделяем буфер под подпись
 	outPtr, err := s.malloc(instance, 512)
 	if err != nil {
 		return "", fmt.Errorf("malloc output failed: %v", err)
 	}
 	defer s.free(instance, outPtr)
 
-	// Вызываем mk_s_f
 	res, err := instance.fnMkSF.Call(instance.ctx,
 		uint64(blocks[0].ptr),
 		uint64(blocks[1].ptr),

@@ -166,7 +166,7 @@ func (c *DataCollector) getChainInfo(ctx context.Context, address string) (map[s
 			})
 
 			if err != nil {
-				errCh <- errors.Wrap(errors.ErrRequestFailed, fmt.Sprintf("failed to process chain %s: %w", chain, err))
+				errCh <- errors.Wrap(errors.ErrRequestFailed, fmt.Sprintf("failed to process chain %s: %s", chain, err.Error()))
 				return
 			}
 

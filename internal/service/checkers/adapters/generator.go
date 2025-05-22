@@ -5,36 +5,32 @@ import (
 	"chief-checker/internal/service/checkers/checkerModels/requestModels"
 	"chief-checker/internal/service/checkers/port"
 	"chief-checker/pkg/errors"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 )
 
-type IDGenerator struct {
-	chars string
-	rand  *rand.Rand
-	mu    sync.Mutex
-}
+// IDGenerator генерирует криптографически безопасные идентификаторы.
+type IDGenerator struct{}
 
+// NewIDGenerator создает новый экземпляр криптографического генератора ID.
 func NewIDGenerator() *IDGenerator {
-	return &IDGenerator{
-		chars: "abcdef0123456789",
-		rand:  rand.New(rand.NewSource(time.Now().UnixNano())),
-	}
+	return &IDGenerator{}
 }
 
+// Generate создает криптографически безопасный случайный идентификатор заданной длины.
 func (g *IDGenerator) Generate(length int) string {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-	result := make([]byte, length)
-	for i := range result {
-		result[i] = g.chars[g.rand.Intn(len(g.chars))]
+	b := make([]byte, length/2+length%2)
+	_, err := rand.Read(b)
+	if err != nil {
+		return ""
 	}
-	return string(result)
+	id := hex.EncodeToString(b)
+	return id[:length]
 }
 
 type RequestParams struct {

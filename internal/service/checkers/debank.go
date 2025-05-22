@@ -7,20 +7,20 @@ import (
 	"chief-checker/pkg/logger"
 )
 
+// Debank реализует Checker для работы с сервисом Debank.
 type Debank struct {
-	// endpoints   map[string]string
-	// httpClient  httpClient.HttpClientInterface
-	cache port.Cache
-	// generator   *ParamGenerator
+	cache       port.Cache
 	ctxDeadline int
 	baseChecker port.ApiClient
 }
 
+// NewDebank создает новый экземпляр Debank.
 func NewDebank(cfg *debankConfig.DebankConfig) (*Debank, error) {
 	factory := NewFactory(cfg)
 	return factory.CreateDebank()
 }
 
+// GetTotalBalance возвращает общий баланс пользователя в USD.
 func (d *Debank) GetTotalBalance(address string) (float64, error) {
 	var resp *debankModels.UserResponse
 	if err := d.baseChecker.MakeRequest(
@@ -41,6 +41,7 @@ func (d *Debank) GetTotalBalance(address string) (float64, error) {
 	return resp.Data.User.Desc.UsdValue, nil
 }
 
+// GetUsedChains возвращает список использованных пользователем цепочек.
 func (d *Debank) GetUsedChains(address string) ([]string, error) {
 	if chains, ok := d.cache.GetChainsCache(address); ok {
 		return chains, nil
@@ -62,6 +63,7 @@ func (d *Debank) GetUsedChains(address string) ([]string, error) {
 	return resp.Data.Chains, nil
 }
 
+// GetTokenBalanceList возвращает список токенов пользователя по цепочке.
 func (d *Debank) GetTokenBalanceList(address, chain string) (*debankModels.TokenBalanceListResponse, error) {
 	var resp *debankModels.TokenBalanceListResponse
 	if err := d.baseChecker.MakeRequest(
@@ -82,6 +84,7 @@ func (d *Debank) GetTokenBalanceList(address, chain string) (*debankModels.Token
 	return resp, nil
 }
 
+// GetProjectAssets возвращает список активов пользователя по проектам.
 func (d *Debank) GetProjectAssets(address string) ([]*debankModels.ProjectAssets, error) {
 	var resp *debankModels.ProjectListResponse
 	if err := d.baseChecker.MakeRequest(

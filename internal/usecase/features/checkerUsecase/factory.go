@@ -81,7 +81,7 @@ func (f *Factory) CreateTaskProcessor(
 	}
 }
 
-func (f *Factory) CreateTaskScheduler(processor orchestration.TaskProcessor) interfaces.TaskScheduler {
+func (f *Factory) CreateWorkerPool(processor orchestration.TaskProcessor) interfaces.TaskScheduler {
 	return orchestration.NewTaskScheduler(f.config.ThreadsCount, processor)
 }
 
@@ -124,7 +124,7 @@ func CreateSystem(config *usecaseConfig.CheckerHandlerConfig) (*CheckerHandler, 
 	}
 
 	processor := factory.CreateTaskProcessor(collector, aggregator, formatter)
-	scheduler := factory.CreateTaskScheduler(processor)
+	scheduler := factory.CreateWorkerPool(processor)
 	handler, err := NewCheckerHandler(
 		pathToAddresses,
 		scheduler,

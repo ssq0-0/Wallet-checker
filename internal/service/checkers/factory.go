@@ -7,16 +7,19 @@ import (
 	"chief-checker/pkg/errors"
 )
 
+// Factory отвечает за создание экземпляров чекеров.
 type Factory struct {
 	config *debankConfig.DebankConfig
 }
 
+// NewFactory создает новый экземпляр Factory.
 func NewFactory(cfg *debankConfig.DebankConfig) *Factory {
 	return &Factory{
 		config: cfg,
 	}
 }
 
+// CreateDebank создает экземпляр Debank чекера.
 func (f *Factory) CreateDebank() (*Debank, error) {
 	wasmClient, err := wasmClient.NewWasm()
 	if err != nil {
@@ -27,7 +30,7 @@ func (f *Factory) CreateDebank() (*Debank, error) {
 	paramGenerator := adapters.NewParamGenerator(idGenerator, wasmClient)
 	cache := adapters.NewMemoryCache()
 
-	baseApiClient := adapters.NewApiChecker(f.config.Endpoints, f.config.HttpClient, cache, paramGenerator, f.config.ContextDeadline)
+	baseApiClient := adapters.NewApiChecker(f.config.BaseURL, f.config.Endpoints, f.config.HttpClient, cache, paramGenerator, f.config.ContextDeadline)
 
 	return &Debank{
 		baseChecker: baseApiClient,

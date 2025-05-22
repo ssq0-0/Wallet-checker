@@ -1,11 +1,13 @@
 package debankModels
 
+// UsedChainsResponse содержит ответ API с цепочками пользователя.
 type UsedChainsResponse struct {
 	Data struct {
 		Chains []string `json:"chains"`
 	} `json:"data"`
 }
 
+// UserResponse содержит ответ API с данными пользователя.
 type UserResponse struct {
 	Data struct {
 		User struct {
@@ -56,6 +58,7 @@ type TokenBalanceListResponse struct {
 	ErrorCode int         `json:"error_code"`
 }
 
+// TokenInfo содержит информацию о токене пользователя.
 type TokenInfo struct {
 	Amount float64 `json:"amount"`
 	// Balance         *big.Int `json:"balance,omitempty"`
@@ -80,6 +83,7 @@ type TokenInfo struct {
 	// TimeAt          *float64 `json:"time_at"`
 }
 
+// ProjectListResponse содержит ответ API со списком проектов пользователя.
 type ProjectListResponse struct {
 	// CacheSeconds float64 `json:"_cache_seconds"`
 	// Seconds      float64 `json:"_seconds"`

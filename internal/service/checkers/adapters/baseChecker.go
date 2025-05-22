@@ -1,7 +1,7 @@
 package adapters
 
 import (
-	"chief-checker/internal/infrastructure/httpClient"
+	"chief-checker/internal/infrastructure/httpClient/httpInterfaces"
 	"chief-checker/internal/service/checkers/checkerModels/requestModels"
 	"chief-checker/internal/service/checkers/port"
 	"chief-checker/pkg/errors"
@@ -15,16 +15,20 @@ import (
 	"time"
 )
 
+// ApiChecker реализует интерфейс ApiClient для работы с API.
 type ApiChecker struct {
+	baseUrl     string
 	endpoints   map[string]string
-	httpClient  httpClient.HttpClientInterface
+	httpClient  httpInterfaces.HttpClientInterface
 	cache       port.Cache
 	generator   port.ParamGenerator
 	ctxDeadline int
 }
 
-func NewApiChecker(endpoints map[string]string, httpClient httpClient.HttpClientInterface, cache port.Cache, generator port.ParamGenerator, ctxDeadline int) port.ApiClient {
+// NewApiChecker создает новый экземпляр ApiChecker.
+func NewApiChecker(baseUrl string, endpoints map[string]string, httpClient httpInterfaces.HttpClientInterface, cache port.Cache, generator port.ParamGenerator, ctxDeadline int) port.ApiClient {
 	return &ApiChecker{
+		baseUrl:     baseUrl,
 		endpoints:   endpoints,
 		httpClient:  httpClient,
 		cache:       cache,
@@ -33,6 +37,7 @@ func NewApiChecker(endpoints map[string]string, httpClient httpClient.HttpClient
 	}
 }
 
+// MakeRequest выполняет HTTP-запрос к API и декодирует результат в result.
 func (d *ApiChecker) MakeRequest(endpointKey string, method string, path string, payload map[string]string, result interface{}, urlParams ...string) error {
 	ctx, cancel := d.createCtx()
 	defer cancel()
@@ -67,7 +72,7 @@ func (d *ApiChecker) getEndpoint(key string) (string, error) {
 		return "", errors.Wrap(errors.ErrNoCreatedValue, fmt.Sprintf("endpoint %s not found", key))
 	}
 	if !strings.HasPrefix(url, "http") {
-		url = "https://api.debank.com" + url
+		url = d.baseUrl + url
 	}
 	return url, nil
 }
@@ -75,18 +80,17 @@ func (d *ApiChecker) getEndpoint(key string) (string, error) {
 func (d *ApiChecker) getHeaders(payload map[string]string, method, path string) (map[string]string, error) {
 	hashParams, err := d.generator.Generate(payload, method, path)
 	if err != nil {
-		return nil, errors.Wrap(errors.ErrNoCreatedValue, fmt.Sprintf("failed to generate request params: %w", err))
+		return nil, errors.Wrap(errors.ErrNoCreatedValue, fmt.Sprintf("failed to generate request params: %s", err.Error()))
 	}
 
 	accountHeader, err := d.getCacheHeaders(payload)
 	if err != nil {
-		return nil, errors.Wrap(errors.ErrNoCreatedValue, fmt.Sprintf("failed to fetch account headers: %w", err))
+		return nil, errors.Wrap(errors.ErrNoCreatedValue, fmt.Sprintf("failed to fetch account headers: %s", err.Error()))
 	}
 
 	accountHeader["x-api-nonce"] = hashParams.Nonce
 	accountHeader["x-api-sign"] = hashParams.Signature
 	accountHeader["x-api-ts"] = hashParams.Timestamp
-	logger.GlobalLogger.Debugf("[DATA] account header: %+v", accountHeader)
 
 	return accountHeader, nil
 }
@@ -117,8 +121,8 @@ func (d *ApiChecker) getCacheHeaders(payload map[string]string) (map[string]stri
 	newCacheHeaders := map[string]string{
 		"accept":             "*/*",
 		"accept-language":    useragent.GetRandomLanguageString(),
-		"origin":             "https://ApiChecker.com",
-		"referer":            "https://ApiChecker.com",
+		"origin":             d.baseUrl,
+		"referer":            d.baseUrl,
 		"source":             "web",
 		"x-api-ver":          "v2",
 		"user-agent":         useragent.GetPlatformSpecificUserAgent(),

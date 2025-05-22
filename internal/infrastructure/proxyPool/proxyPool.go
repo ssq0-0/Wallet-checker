@@ -72,7 +72,7 @@ func (p *ProxyPoolImpl) BlockProxy(proxy string, duration time.Duration) {
 	}
 
 	heap.Remove(p.minHeap, item.Index)
-	logger.GlobalLogger.Debugf("Blocking proxy %s for %v", proxy, duration)
+	logger.GlobalLogger.Infof("Blocking proxy %s for %v", proxy, duration)
 	delete(p.proxies, proxy)
 
 	time.AfterFunc(duration, func() {
@@ -80,7 +80,7 @@ func (p *ProxyPoolImpl) BlockProxy(proxy string, duration time.Duration) {
 		defer p.mu.Unlock()
 		p.proxies[proxy] = item
 		heap.Push(p.minHeap, item)
-		logger.GlobalLogger.Debugf("Proxy %s is available again", proxy)
+		logger.GlobalLogger.Infof("Proxy %s is available again", proxy)
 		p.cond.Signal()
 	})
 }

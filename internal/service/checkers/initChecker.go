@@ -6,6 +6,7 @@ import (
 	"errors"
 )
 
+// Checker определяет интерфейс для получения информации о балансе и активах пользователя.
 type Checker interface {
 	GetTotalBalance(address string) (float64, error)
 	GetUsedChains(address string) ([]string, error)
@@ -13,6 +14,7 @@ type Checker interface {
 	GetProjectAssets(address string) ([]*debankModels.ProjectAssets, error)
 }
 
+// InitChecker инициализирует чекер по имени и конфигу.
 func InitChecker(checkerName string, cfg *appConfig.Checkers) (Checker, error) {
 	switch checkerName {
 	case "debank":

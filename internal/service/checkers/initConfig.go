@@ -10,6 +10,7 @@ import (
 	"chief-checker/pkg/errors"
 	"chief-checker/pkg/proxyManager"
 	"chief-checker/pkg/utils"
+	"os"
 	"time"
 )
 
@@ -27,7 +28,7 @@ func InitDebankConfig(cfg *appConfig.DebankSettings) (*debankConfig.DebankConfig
 		return nil, err
 	}
 
-	proxyList, err := initProxies(cfg.ProxyFilePath)
+	proxyList, err := initProxies(cfg.ProxyFilePath, cfg.RotateProxy)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +105,7 @@ func validateDebankParam(cfg *appConfig.DebankSettings) (bool, error) {
 // Returns:
 // - []string: list of validated proxy strings
 // - error: if reading or parsing fails
-func initProxies(proxyFilePath string) ([]string, error) {
+func initProxies(proxyFilePath string, rotateProxy bool) ([]string, error) {
 	proxylist, err := utils.ReadProxyList(proxyFilePath)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrFailedInit, err.Error())
@@ -125,6 +126,11 @@ func initProxies(proxyFilePath string) ([]string, error) {
 	proxyStrings := make([]string, len(proxies))
 	for i, proxy := range proxies {
 		proxyStrings[i] = manager.FormatProxy(proxy)
+	}
+
+	if rotateProxy {
+		os.Setenv("HTTP_PROXY", proxyStrings[0])
+		os.Setenv("HTTPS_PROXY", proxyStrings[0])
 	}
 
 	return proxyStrings, nil

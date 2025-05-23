@@ -26,6 +26,26 @@ cd chief-checker
 go build -o chief-checker cmd/main.go
 ```
 
+# Proxy Configuration
+- For rotating proxies, set `rotate_proxy` to true and `use_proxy_pool` to false.
+- For static proxies, set `rotate_proxy` to false and `use_proxy_pool` to true.
+**You can list proxies in the file in any of the following formats**:
+- `user:pass@host:port`
+- `user:pass:host:port`
+- `host:port@user:pass`
+- `host:port:user:pass`
+- `http://user:pass@host:port`
+- `http://user:pass:host:port`
+- `http://host:port@user:pass`
+- `http://host:port:user:pass`
+- `https://user:pass@host:port`
+- `https://user:pass:host:port`
+- `https://host:port@user:pass`
+- `https://host:port:user:pass`
+- `socks5://user:pass@host:port`
+- `socks5://user:pass:host:port`
+- `socks5://host:port@user:pass`
+- `socks5://host:port:user:pass`
 ### Running the Application
 ```bash
 ./chief-checker
@@ -72,10 +92,11 @@ Configuration of the application is located in the file `internal/config/appConf
 - `deadline_request` (int): Request timeout in seconds
 
 ### Donations
-**EVM** 
-**BTC**
-**SOL**
-**TRC20**
+**EVM** 0xb5017C6CD09e55fd8461ed10b6b03Da67798e99d
+**BTC** bc1qyaspnva86536ccy4vz92vp646m4u7u0drfjxhq
+**SOL** 7SXTWNzqKyewN2LtoWTDpppMmXNysRrxrPFtosnnEGmx
+**TRC20** TBVbyuoC1xuuQkKi62b8hgnj4UX5YwNSjQ
+[NodeMaven Proxy](https://nodemaven.com/?ref_id=1933c54f)
 
 ---
 
@@ -100,8 +121,27 @@ git clone https://github.com/ssq0-0/chief-checker.git
 cd chief-checker
 
 # Настроить конфигурацию(см. ниже)
-- При использовании ротационных прокси поставить true возле rotate_proxy. В таком случае в параметрах use_proxy_pool, reuse_proxy - false
-- При использоании статичных прокси - false - rotate_proxy, use_proxy_pool - true. Есть два варианта - использовать на каждый запрос уникальный прокси, установить true в параметр reuse_proxy, иначе - false(429 ошибка будет встречаться очень часто)
+- При использовании ротационных прокси поставить true возле rotate_proxy. В таком случае в параметрах use_proxy_pool - false
+- При использоании статичных прокси - false - rotate_proxy, use_proxy_pool - true. 
+
+**Прокси можно вставлять в файл в любом из форматов**:
+- `user:pass@host:port`
+- `user:pass:host:port`
+- `host:port@user:pass`
+- `host:port:user:pass`
+- `http://user:pass@host:port`
+- `http://user:pass:host:port`
+- `http://host:port@user:pass`
+- `http://host:port:user:pass`
+- `https://user:pass@host:port`
+- `https://user:pass:host:port`
+- `https://host:port@user:pass`
+- `https://host:port:user:pass`
+- `socks5://user:pass@host:port`
+- `socks5://user:pass@host:port`
+- `socks5://host:port@user:pass`
+- `socks5://host:port:user:pass`
+
 # Собрать проект
 go build -o chief-checker cmd/main.go
 ```
@@ -152,7 +192,8 @@ go build -o chief-checker cmd/main.go
 - `deadline_request` (int): Таймаут запросов в секундах
 
 ### Донаты
-**EVM** 
-**BTC**
-**SOL**
-**TRC20**
+**EVM** 0xb5017C6CD09e55fd8461ed10b6b03Da67798e99d
+**BTC** bc1qyaspnva86536ccy4vz92vp646m4u7u0drfjxhq
+**SOL** 7SXTWNzqKyewN2LtoWTDpppMmXNysRrxrPFtosnnEGmx
+**TRC20** TBVbyuoC1xuuQkKi62b8hgnj4UX5YwNSjQ
+[NodeMaven Proxy](https://nodemaven.com/?ref_id=1933c54f)

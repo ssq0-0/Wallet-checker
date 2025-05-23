@@ -1,5 +1,5 @@
 {
-    "concurrency":100,
+    "concurrency":40,
     "logger_level":"info",
     "checkers_params":{
         "debank":{
@@ -10,10 +10,9 @@
                 "token_balance_list":"/token/balance_list?user_addr=%s&chain=%s",
                 "project_list":"/portfolio/project_list?user_addr=%s"
             },
-            "rotate_proxy": true,
+            "rotate_proxy": false,
             "use_proxy_pool": true,
-            "reuse_proxy":false,
-            "proxy_file_path": "/Users/ssq/Downloads/prx.txt",
+            "proxy_file_path": "",
             "deadline_request": 30
         }
     }

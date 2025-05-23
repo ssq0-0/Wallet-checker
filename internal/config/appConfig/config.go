@@ -1,7 +1,7 @@
 package appConfig
 
 type Config struct {
-	Threads     int      `json:"threads"`
+	Concurrency int      `json:"concurrency"`
 	LoggerLevel string   `json:"logger_level"`
 	Checkers    Checkers `json:"checkers_params"`
 }
@@ -15,6 +15,7 @@ type DebankSettings struct {
 	Endpoints       map[string]string `json:"endpoints"`
 	UseProxyPool    bool              `json:"use_proxy_pool"`
 	RotateProxy     bool              `json:"rotate_proxy"`
+	ReuseProxy      bool              `json:"reuse_proxy"`
 	ProxyFilePath   string            `json:"proxy_file_path"`
 	ContextDeadline int               `json:"deadline_request"`
 }

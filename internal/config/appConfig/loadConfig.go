@@ -4,10 +4,9 @@ package appConfig
 
 import (
 	"chief-checker/pkg/errors"
-	"path/filepath"
-	"strings"
-
-	"github.com/spf13/viper"
+	"chief-checker/pkg/logger"
+	"encoding/json"
+	"os"
 )
 
 // LoadConfig loads and parses the application configuration from the specified JSON file.
@@ -24,27 +23,22 @@ import (
 // Environment variables can override configuration values using the format:
 // APP_SETTING_NAME=value
 func LoadConfig(path string) (*Config, error) {
-	v := viper.New()
+	logger.GlobalLogger.Debugf("Loading config from: %s", path)
 
-	dir := filepath.Dir(path)
-	file := filepath.Base(path)
-
-	configName := strings.TrimSuffix(file, filepath.Ext(file))
-
-	v.SetConfigName(configName)
-	v.SetConfigType("json")
-	v.AddConfigPath(dir)
-
-	appConfig := &Config{}
-	if err := v.ReadInConfig(); err != nil {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		logger.GlobalLogger.Errorf("Failed to read config file: %v", err)
 		return nil, errors.Wrap(errors.ErrConfigRead, err.Error())
 	}
 
-	if err := v.Unmarshal(appConfig); err != nil {
+	appConfig := &Config{}
+	if err := json.Unmarshal(data, appConfig); err != nil {
+		logger.GlobalLogger.Errorf("Failed to unmarshal config: %v", err)
 		return nil, errors.Wrap(errors.ErrConfigParse, err.Error())
 	}
 
 	if appConfig.Checkers.Debank == nil {
+		logger.GlobalLogger.Error("Debank settings are nil")
 		return nil, errors.Wrap(errors.ErrValueEmpty, "config is empty")
 	}
 

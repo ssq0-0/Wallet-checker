@@ -54,7 +54,7 @@ go build -o chief-checker cmd/main.go
 Configuration of the application is located in the file `internal/config/appConfig/config.json`. Here is the detailed description of the parameters:
 
 #### Main Parameters
-- `threads` (int): Number of parallel threads for processing requests
+- `concurrency` (int): Number of concurrency functions for processing requests (**grossly** speaking - threads)
 - `logger_level` (string): Logging level (debug, info, warn, error)
 
 #### Checker Parameters
@@ -72,7 +72,10 @@ Configuration of the application is located in the file `internal/config/appConf
 - `deadline_request` (int): Request timeout in seconds
 
 ### Donations
-[Your donation section here]
+**EVM** 
+**BTC**
+**SOL**
+**TRC20**
 
 ---
 
@@ -96,6 +99,9 @@ git clone https://github.com/ssq0-0/chief-checker.git
 # Перейти в директорию проекта
 cd chief-checker
 
+# Настроить конфигурацию(см. ниже)
+- При использовании ротационных прокси поставить true возле rotate_proxy. В таком случае в параметрах use_proxy_pool, reuse_proxy - false
+- При использоании статичных прокси - false - rotate_proxy, use_proxy_pool - true. Есть два варианта - использовать на каждый запрос уникальный прокси, установить true в параметр reuse_proxy, иначе - false(429 ошибка будет встречаться очень часто)
 # Собрать проект
 go build -o chief-checker cmd/main.go
 ```
@@ -128,7 +134,7 @@ go build -o chief-checker cmd/main.go
 Конфигурация приложения находится в файле `internal/config/appConfig/config.json`. Вот подробное описание параметров:
 
 #### Основные параметры
-- `threads` (int): Количество параллельных потоков для обработки запросов
+- `concurrency` (int): Количество конкурентных функций для обработки запросов(**грубо** говоря - потоков)
 - `logger_level` (string): Уровень логирования (debug, info, warn, error)
 
 #### Параметры чекеров
@@ -139,11 +145,14 @@ go build -o chief-checker cmd/main.go
   - `used_chains`: Получение списка используемых блокчейнов
   - `token_balance_list`: Получение списка балансов токенов
   - `project_list`: Получение списка проектов в портфолио
-- `rotate_proxy` (boolean): Включение ротации прокси
+- `rotate_proxy` (boolean): Использование ротационных прокси
 - `use_proxy_pool` (boolean): Использование пула прокси
 - `reuse_proxy` (boolean): Повторное использование прокси
 - `proxy_file_path` (string): Путь к файлу с прокси
 - `deadline_request` (int): Таймаут запросов в секундах
 
 ### Донаты
-[Ваша секция для донатов здесь] 
+**EVM** 
+**BTC**
+**SOL**
+**TRC20**

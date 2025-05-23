@@ -1,6 +1,6 @@
 {
-    "threads":40,
-    "logger_level":"debug",
+    "concurrency":100,
+    "logger_level":"info",
     "checkers_params":{
         "debank":{
             "base_url":"https://api.debank.com",
@@ -11,9 +11,9 @@
                 "project_list":"/portfolio/project_list?user_addr=%s"
             },
             "rotate_proxy": true,
-            "use_proxy_pool": false,
+            "use_proxy_pool": true,
             "reuse_proxy":false,
-            "proxy_file_path": "",
+            "proxy_file_path": "/Users/ssq/Downloads/prx.txt",
             "deadline_request": 30
         }
     }

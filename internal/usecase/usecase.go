@@ -59,7 +59,7 @@ func (u *UseCase) Run() error {
 // - error: if initialization fails
 func (u *UseCase) initApiCheckerHandler() (*checkerUsecase.CheckerHandler, error) {
 	checkerConfig := &usecaseConfig.CheckerHandlerConfig{
-		ThreadsCount:         u.config.Threads,
+		ThreadsCount:         u.config.Concurrency,
 		CheckerServiceConfig: &u.config.Checkers,
 	}
 

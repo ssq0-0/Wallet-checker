@@ -27,16 +27,21 @@ func InitDebankConfig(cfg *appConfig.DebankSettings) (*debankConfig.DebankConfig
 		return nil, err
 	}
 
-	proxyPool, err := initProxyPool(cfg.ProxyFilePath)
+	proxyList, err := initProxies(cfg.ProxyFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	proxyPool, err := initProxyPool(proxyList)
 	if err != nil {
 		return nil, err
 	}
 	cfgHttp := httpConfig.Config{
-		Timeout:         10 * time.Second,
+		Timeout:         30 * time.Second,
 		MaxRetries:      5,
 		RetryDelay:      3 * time.Second,
-		UseProxyPool:    true,
-		IsRotatingProxy: true,
+		UseProxyPool:    cfg.UseProxyPool,
+		IsRotatingProxy: cfg.RotateProxy,
 		BlockTime:       10 * time.Second,
 		BrowserHeaders:  true,
 		RandomizeTLS:    true,
@@ -71,12 +76,22 @@ func validateDebankParam(cfg *appConfig.DebankSettings) (bool, error) {
 		return false, errors.Wrap(errors.ErrValueEmpty, "debank settings is nil")
 	}
 
-	if cfg.ProxyFilePath == "" ||
-		cfg.BaseURL == "" ||
-		cfg.ContextDeadline == 0 ||
-		cfg.Endpoints == nil {
-		return false, errors.Wrap(errors.ErrValueEmpty, "required parameters not found")
+	if cfg.ProxyFilePath == "" {
+		return false, errors.Wrap(errors.ErrValueEmpty, "proxy file path is required")
 	}
+
+	if cfg.BaseURL == "" {
+		return false, errors.Wrap(errors.ErrValueEmpty, "base URL is required")
+	}
+
+	if cfg.ContextDeadline == 0 {
+		return false, errors.Wrap(errors.ErrValueEmpty, "context deadline is required")
+	}
+
+	if cfg.Endpoints == nil {
+		return false, errors.Wrap(errors.ErrValueEmpty, "endpoints are required")
+	}
+
 	return true, nil
 }
 
@@ -95,17 +110,24 @@ func initProxies(proxyFilePath string) ([]string, error) {
 		return nil, errors.Wrap(errors.ErrFailedInit, err.Error())
 	}
 
-	proxyManager, err := proxyManager.NewProxyManager(proxylist)
-	if err != nil {
-		return nil, errors.Wrap(errors.ErrFailedInit, err.Error())
+	parser := proxyManager.NewDefaultProxyParser()
+	validator := proxyManager.NewDefaultProxyValidator()
+	formatter := proxyManager.NewDefaultProxyFormatter()
+	manager := proxyManager.NewProxyManager(parser, validator, formatter)
+
+	for _, proxyStr := range proxylist {
+		if err := manager.AddProxy(proxyStr); err != nil {
+			return nil, errors.Wrap(errors.ErrFailedInit, err.Error())
+		}
 	}
 
-	proxies, err := proxyManager.ParseProxy(proxylist)
-	if err != nil {
-		return nil, errors.Wrap(errors.ErrFailedInit, err.Error())
+	proxies := manager.GetProxies()
+	proxyStrings := make([]string, len(proxies))
+	for i, proxy := range proxies {
+		proxyStrings[i] = manager.FormatProxy(proxy)
 	}
 
-	return proxies, nil
+	return proxyStrings, nil
 }
 
 // initProxyPool creates a proxy pool from a list of proxies in a file.
@@ -117,13 +139,8 @@ func initProxies(proxyFilePath string) ([]string, error) {
 // Returns:
 // - proxyPool.ProxyPool: initialized proxy pool
 // - error: if initialization fails
-func initProxyPool(proxyFilePath string) (proxyPool.ProxyPool, error) {
-	proxylist, err := utils.ReadProxyList(proxyFilePath)
-	if err != nil {
-		return nil, errors.Wrap(errors.ErrFailedInit, err.Error())
-	}
-
-	proxyPool, err := proxyPool.NewProxyPool(proxylist)
+func initProxyPool(proxyList []string) (proxyPool.ProxyPool, error) {
+	proxyPool, err := proxyPool.NewProxyPool(proxyList)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrFailedInit, err.Error())
 	}

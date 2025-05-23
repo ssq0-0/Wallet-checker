@@ -1,4 +1,4 @@
-# Chief Checker | Чиф Чекер
+# Wallet Checker 
 
 [English](#english) | [Русский](#russian)
 

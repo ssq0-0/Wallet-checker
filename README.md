@@ -6,13 +6,10 @@
 ## Русский
 
 ### Описание
-Chief Checker - это мощный инструмент, разработанный для проверки и анализа различных аспектов веб-сервисов и сетей. Построенный на Go, он обеспечивает эффективную и надежную производительность для сетевых операций.
+Chief Checker - это мощный инструмент, разработанный для проверки и анализа различных аспектов веб-сервисов и сетей. Построенный на Go, он обеспечивает эффективную и надежную производительность.
 
 ### Возможности
-- Высокопроизводительные сетевые операции
-- Настраиваемая система логирования
-- Модульная архитектура
-- Кросс-платформенная совместимость
+- Debank парсер. Собирает всю информацию о кошельке и записывает в файл в формате (общий баланс - баласн по каждой используемой сети - балансы в пулах ликвидности), в конце подводит общую статистику по общему балансу в usd и в каждом токене.
 
 ### Установка
 ```bash
@@ -112,10 +109,7 @@ go build -o chief-checker cmd/main.go
 Chief Checker is a powerful tool designed for checking and analyzing various aspects of web services and networks. Built with Go, it provides efficient and reliable performance for network operations.
 
 ### Features
-- High-performance network operations
-- Configurable logging system
-- Modular architecture
-- Cross-platform compatibility
+- DeBank parser. Collects all wallet information and writes it to a file in a format (total balance - balance by each used network - balances in liquidity pools), and provides overall statistics on total balance in USD and in each token.
 
 ### Installation
 ```bash
@@ -125,13 +119,10 @@ git clone https://github.com/ssq0-0/chief-checker.git
 # Navigate to the project directory
 cd chief-checker
 
-# Build the project
-go build -o chief-checker cmd/main.go
-```
-
-# Proxy Configuration
+# Configure the application (see below)
 - For rotating proxies, set `rotate_proxy` to true and `use_proxy_pool` to false.
 - For static proxies, set `rotate_proxy` to false and `use_proxy_pool` to true.
+
 **You can list proxies in the file in any of the following formats**:
 - `user:pass@host:port`
 - `user:pass:host:port`
@@ -149,6 +140,11 @@ go build -o chief-checker cmd/main.go
 - `socks5://user:pass:host:port`
 - `socks5://host:port@user:pass`
 - `socks5://host:port:user:pass`
+
+# Build the project
+go build -o chief-checker cmd/main.go
+```
+
 ### Running the Application
 ```bash
 ./chief-checker
@@ -168,16 +164,16 @@ go build -o chief-checker cmd/main.go
 .
 ├── cmd/            # Application entry points
 ├── internal/       # Private application code
-├── pkg/           # Public library code
-├── go.mod         # Go module definition
-└── go.sum         # Go module checksums
+├── pkg/            # Public library code
+├── go.mod          # Go module definition
+└── go.sum          # Go module checksums
 ```
 
 ### Configuration
 Configuration of the application is located in the file `internal/config/appConfig/config.json`. Here is the detailed description of the parameters:
 
 #### Main Parameters
-- `concurrency` (int): Number of concurrency functions for processing requests (**grossly** speaking - threads)
+- `concurrency` (int): Number of concurrent functions for processing requests (**grossly** speaking - threads)
 - `logger_level` (string): Logging level (debug, info, warn, error)
 
 #### Checker Parameters

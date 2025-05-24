@@ -2,104 +2,6 @@
 
 [English](#english) | [Русский](#russian)
 
-<a name="english"></a>
-## English
-
-### Description
-Chief Checker is a powerful tool designed for checking and analyzing various aspects of web services and networks. Built with Go, it provides efficient and reliable performance for network operations.
-
-### Features
-- High-performance network operations
-- Configurable logging system
-- Modular architecture
-- Cross-platform compatibility
-
-### Installation
-```bash
-# Clone the repository
-git clone https://github.com/ssq0-0/chief-checker.git
-
-# Navigate to the project directory
-cd chief-checker
-
-# Build the project
-go build -o chief-checker cmd/main.go
-```
-
-# Proxy Configuration
-- For rotating proxies, set `rotate_proxy` to true and `use_proxy_pool` to false.
-- For static proxies, set `rotate_proxy` to false and `use_proxy_pool` to true.
-**You can list proxies in the file in any of the following formats**:
-- `user:pass@host:port`
-- `user:pass:host:port`
-- `host:port@user:pass`
-- `host:port:user:pass`
-- `http://user:pass@host:port`
-- `http://user:pass:host:port`
-- `http://host:port@user:pass`
-- `http://host:port:user:pass`
-- `https://user:pass@host:port`
-- `https://user:pass:host:port`
-- `https://host:port@user:pass`
-- `https://host:port:user:pass`
-- `socks5://user:pass@host:port`
-- `socks5://user:pass:host:port`
-- `socks5://host:port@user:pass`
-- `socks5://host:port:user:pass`
-### Running the Application
-```bash
-./chief-checker
-```
-
-### Technical Details
-- Built with Go 1.24
-- Uses modern Go modules for dependency management
-- Key dependencies:
-  - github.com/refraction-networking/utls
-  - github.com/sirupsen/logrus
-  - github.com/stretchr/testify
-  - golang.org/x/net
-
-### Project Structure
-```
-.
-├── cmd/            # Application entry points
-├── internal/       # Private application code
-├── pkg/           # Public library code
-├── go.mod         # Go module definition
-└── go.sum         # Go module checksums
-```
-
-### Configuration
-Configuration of the application is located in the file `internal/config/appConfig/config.json`. Here is the detailed description of the parameters:
-
-#### Main Parameters
-- `concurrency` (int): Number of concurrency functions for processing requests (**grossly** speaking - threads)
-- `logger_level` (string): Logging level (debug, info, warn, error)
-
-#### Checker Parameters
-##### DeBank
-- `base_url` (string): Base URL of the DeBank API
-- `endpoints` (object): Configuration of the API endpoints
-  - `user_info`: Getting user information
-  - `used_chains`: Getting the list of used blockchains
-  - `token_balance_list`: Getting the list of token balances
-  - `project_list`: Getting the list of projects in the portfolio
-- `rotate_proxy` (boolean): Rotation of proxies
-- `use_proxy_pool` (boolean): Using a proxy pool
-- `reuse_proxy` (boolean): Reusing proxies
-- `proxy_file_path` (string): Path to the proxy file
-- `deadline_request` (int): Request timeout in seconds
-
-### Donations
-**EVM** 0xb5017C6CD09e55fd8461ed10b6b03Da67798e99d
-**BTC** bc1qyaspnva86536ccy4vz92vp646m4u7u0drfjxhq
-**SOL** 7SXTWNzqKyewN2LtoWTDpppMmXNysRrxrPFtosnnEGmx
-**TRC20** TBVbyuoC1xuuQkKi62b8hgnj4UX5YwNSjQ
-[NodeMaven Proxy](https://nodemaven.com/?ref_id=1933c54f)
-
----
-
 <a name="russian"></a>
 ## Русский
 
@@ -193,7 +95,114 @@ go build -o chief-checker cmd/main.go
 
 ### Донаты
 **EVM** 0xb5017C6CD09e55fd8461ed10b6b03Da67798e99d
+
 **BTC** bc1qyaspnva86536ccy4vz92vp646m4u7u0drfjxhq
+
 **SOL** 7SXTWNzqKyewN2LtoWTDpppMmXNysRrxrPFtosnnEGmx
+
 **TRC20** TBVbyuoC1xuuQkKi62b8hgnj4UX5YwNSjQ
+
 [NodeMaven Proxy](https://nodemaven.com/?ref_id=1933c54f)
+---
+
+<a name="english"></a>
+## English
+
+### Description
+Chief Checker is a powerful tool designed for checking and analyzing various aspects of web services and networks. Built with Go, it provides efficient and reliable performance for network operations.
+
+### Features
+- High-performance network operations
+- Configurable logging system
+- Modular architecture
+- Cross-platform compatibility
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/ssq0-0/chief-checker.git
+
+# Navigate to the project directory
+cd chief-checker
+
+# Build the project
+go build -o chief-checker cmd/main.go
+```
+
+# Proxy Configuration
+- For rotating proxies, set `rotate_proxy` to true and `use_proxy_pool` to false.
+- For static proxies, set `rotate_proxy` to false and `use_proxy_pool` to true.
+**You can list proxies in the file in any of the following formats**:
+- `user:pass@host:port`
+- `user:pass:host:port`
+- `host:port@user:pass`
+- `host:port:user:pass`
+- `http://user:pass@host:port`
+- `http://user:pass:host:port`
+- `http://host:port@user:pass`
+- `http://host:port:user:pass`
+- `https://user:pass@host:port`
+- `https://user:pass:host:port`
+- `https://host:port@user:pass`
+- `https://host:port:user:pass`
+- `socks5://user:pass@host:port`
+- `socks5://user:pass:host:port`
+- `socks5://host:port@user:pass`
+- `socks5://host:port:user:pass`
+### Running the Application
+```bash
+./chief-checker
+```
+
+### Technical Details
+- Built with Go 1.24
+- Uses modern Go modules for dependency management
+- Key dependencies:
+  - github.com/refraction-networking/utls
+  - github.com/sirupsen/logrus
+  - github.com/stretchr/testify
+  - golang.org/x/net
+
+### Project Structure
+```
+.
+├── cmd/            # Application entry points
+├── internal/       # Private application code
+├── pkg/           # Public library code
+├── go.mod         # Go module definition
+└── go.sum         # Go module checksums
+```
+
+### Configuration
+Configuration of the application is located in the file `internal/config/appConfig/config.json`. Here is the detailed description of the parameters:
+
+#### Main Parameters
+- `concurrency` (int): Number of concurrency functions for processing requests (**grossly** speaking - threads)
+- `logger_level` (string): Logging level (debug, info, warn, error)
+
+#### Checker Parameters
+##### DeBank
+- `base_url` (string): Base URL of the DeBank API
+- `endpoints` (object): Configuration of the API endpoints
+  - `user_info`: Getting user information
+  - `used_chains`: Getting the list of used blockchains
+  - `token_balance_list`: Getting the list of token balances
+  - `project_list`: Getting the list of projects in the portfolio
+- `rotate_proxy` (boolean): Rotation of proxies
+- `use_proxy_pool` (boolean): Using a proxy pool
+- `reuse_proxy` (boolean): Reusing proxies
+- `proxy_file_path` (string): Path to the proxy file
+- `deadline_request` (int): Request timeout in seconds
+
+### Donations
+**EVM** 0xb5017C6CD09e55fd8461ed10b6b03Da67798e99d
+
+**BTC** bc1qyaspnva86536ccy4vz92vp646m4u7u0drfjxhq
+
+**SOL** 7SXTWNzqKyewN2LtoWTDpppMmXNysRrxrPFtosnnEGmx
+
+**TRC20** TBVbyuoC1xuuQkKi62b8hgnj4UX5YwNSjQ
+
+[NodeMaven Proxy](https://nodemaven.com/?ref_id=1933c54f)
+
+---

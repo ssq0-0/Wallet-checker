@@ -10,22 +10,35 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"chief-checker/internal/infrastructure/httpClient/httpFactory"
 )
 
+// createRequestWithContext builds an HTTP request with the given context, URL, method, and body.
+// If reqBody is provided, it's marshaled to JSON and set as the request body.
+//
+// Parameters:
+//   - ctx: Context for request cancellation and timeout
+//   - url: Target URL for the request
+//   - method: HTTP method (GET, POST, etc.)
+//   - reqBody: Optional request body (will be JSON marshaled)
+//
+// Returns:
+//   - The constructed http.Request object and any error that occurred
 func (h *HttpClient) createRequestWithContext(ctx context.Context, url, method string, reqBody interface{}) (*http.Request, error) {
 	var body io.Reader
 
 	if reqBody != nil {
 		jsonData, err := json.Marshal(reqBody)
 		if err != nil {
-			return nil, fmt.Errorf("ошибка маршалинга тела запроса: %v", err)
+			return nil, fmt.Errorf("error marshaling request body: %v", err)
 		}
 		body = bytes.NewBuffer(jsonData)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка создания HTTP запроса: %v", err)
+		return nil, fmt.Errorf("error creating HTTP request: %v", err)
 	}
 
 	if reqBody != nil {
@@ -35,6 +48,17 @@ func (h *HttpClient) createRequestWithContext(ctx context.Context, url, method s
 	return req, nil
 }
 
+// executeWithRetries performs the HTTP request with retry logic.
+// It will retry on specific error conditions up to the configured maximum number of retries.
+// Each retry uses a fresh transport and potentially a new proxy from the pool.
+//
+// Parameters:
+//   - req: The HTTP request to execute
+//   - respBody: Pointer to a struct where the response will be unmarshaled
+//   - headers: Additional HTTP headers to include with the request
+//
+// Returns:
+//   - Error if all retry attempts fail, nil on success
 func (h *HttpClient) executeWithRetries(req *http.Request, respBody interface{}, headers map[string]string) error {
 	for key, value := range headers {
 		req.Header.Set(key, value)
@@ -48,15 +72,24 @@ func (h *HttpClient) executeWithRetries(req *http.Request, respBody interface{},
 			return ctx.Err()
 		}
 
+		// Create a new transport for each request
+		transportFactory := httpFactory.NewTransportFactory()
+		newTransport := transportFactory.CreateTransport(h.config)
+
+		h.mutex.Lock()
+		h.client.Transport = newTransport
+		h.transport = newTransport
+		h.mutex.Unlock()
+
 		if h.proxyPool != nil && h.config.UseProxyPool {
 			currentProxy = h.proxyPool.GetFreeProxy()
 			if currentProxy == "" {
-				return fmt.Errorf("нет доступных прокси")
+				return fmt.Errorf("no available proxies")
 			}
 
 			proxyURL, err := url.Parse(currentProxy)
 			if err != nil {
-				return fmt.Errorf("неверный формат прокси %s: %v", currentProxy, err)
+				return fmt.Errorf("invalid proxy format %s: %v", currentProxy, err)
 			}
 
 			h.mutex.Lock()
@@ -67,6 +100,12 @@ func (h *HttpClient) executeWithRetries(req *http.Request, respBody interface{},
 		}
 
 		resp, err := h.client.Do(req)
+
+		// Close all connections after the request
+		if transport, ok := h.client.Transport.(*http.Transport); ok {
+			transport.CloseIdleConnections()
+		}
+
 		if shouldRetry, retryErr := h.handleRequestError(err, currentProxy); shouldRetry {
 			select {
 			case <-ctx.Done():
@@ -79,7 +118,7 @@ func (h *HttpClient) executeWithRetries(req *http.Request, respBody interface{},
 		}
 
 		if resp == nil {
-			return fmt.Errorf("получен пустой ответ")
+			return fmt.Errorf("received empty response")
 		}
 		defer resp.Body.Close()
 
@@ -99,9 +138,19 @@ func (h *HttpClient) executeWithRetries(req *http.Request, respBody interface{},
 		}
 		return nil
 	}
-	return fmt.Errorf("запрос не удался после %d попыток", h.config.MaxRetries)
+	return fmt.Errorf("request failed after %d attempts", h.config.MaxRetries)
 }
 
+// executeWithoutRetries performs the HTTP request without retry logic.
+// It still uses proxy rotation if configured, but doesn't retry on failures.
+//
+// Parameters:
+//   - req: The HTTP request to execute
+//   - respBody: Pointer to a struct where the response will be unmarshaled
+//   - headers: Additional HTTP headers to include with the request
+//
+// Returns:
+//   - Error if the request fails, nil on success
 func (h *HttpClient) executeWithoutRetries(req *http.Request, respBody interface{}, headers map[string]string) error {
 	for key, value := range headers {
 		req.Header.Set(key, value)
@@ -109,6 +158,15 @@ func (h *HttpClient) executeWithoutRetries(req *http.Request, respBody interface
 
 	ctx := req.Context()
 	var currentProxy string
+
+	// Create a new transport for each request
+	transportFactory := httpFactory.NewTransportFactory()
+	newTransport := transportFactory.CreateTransport(h.config)
+
+	h.mutex.Lock()
+	h.client.Transport = newTransport
+	h.transport = newTransport
+	h.mutex.Unlock()
 
 	if h.proxyPool != nil && h.config.UseProxyPool {
 		if ctx.Err() != nil {
@@ -119,7 +177,7 @@ func (h *HttpClient) executeWithoutRetries(req *http.Request, respBody interface
 		if currentProxy != "" {
 			proxyURL, err := url.Parse(currentProxy)
 			if err != nil {
-				return fmt.Errorf("неверный формат прокси %s: %v", currentProxy, err)
+				return fmt.Errorf("invalid proxy format %s: %v", currentProxy, err)
 			}
 
 			h.mutex.Lock()
@@ -131,6 +189,12 @@ func (h *HttpClient) executeWithoutRetries(req *http.Request, respBody interface
 	}
 
 	resp, err := h.client.Do(req)
+
+	// Close all connections after the request
+	if transport, ok := h.client.Transport.(*http.Transport); ok {
+		transport.CloseIdleConnections()
+	}
+
 	if err != nil {
 		if h.proxyPool != nil && currentProxy != "" && !h.config.IsRotatingProxy &&
 			(strings.Contains(err.Error(), "Proxy Authentication Required") ||
@@ -139,11 +203,11 @@ func (h *HttpClient) executeWithoutRetries(req *http.Request, respBody interface
 
 			h.proxyPool.BlockProxy(currentProxy, h.config.BlockTime)
 		}
-		return fmt.Errorf("ошибка запроса: %v", err)
+		return fmt.Errorf("request error: %v", err)
 	}
 
 	if resp == nil {
-		return fmt.Errorf("получен пустой ответ")
+		return fmt.Errorf("received empty response")
 	}
 	defer resp.Body.Close()
 
@@ -152,7 +216,7 @@ func (h *HttpClient) executeWithoutRetries(req *http.Request, respBody interface
 			h.proxyPool.BlockProxy(currentProxy, h.config.BlockTime)
 		}
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("ошибка статуса: %d (лимит запросов или проблема с прокси): %s", resp.StatusCode, string(body))
+		return fmt.Errorf("status error: %d (rate limit or proxy issue): %s", resp.StatusCode, string(body))
 	}
 
 	return h.parseResponse(resp, respBody)

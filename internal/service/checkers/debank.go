@@ -1,26 +1,24 @@
 package checkers
 
 import (
-	"chief-checker/internal/config/serviceConfig/debankConfig"
+	"chief-checker/internal/config/serviceConfig"
+	"chief-checker/internal/service/checkers/checkerModels/commonModels"
 	"chief-checker/internal/service/checkers/checkerModels/debankModels"
 	"chief-checker/internal/service/checkers/port"
 	"chief-checker/pkg/logger"
 )
 
-// Debank реализует Checker для работы с сервисом Debank.
 type Debank struct {
 	cache       port.Cache
 	ctxDeadline int
 	baseChecker port.ApiClient
 }
 
-// NewDebank создает новый экземпляр Debank.
-func NewDebank(cfg *debankConfig.DebankConfig) (*Debank, error) {
+func NewDebank(cfg *serviceConfig.ApiCheckerConfig) (*Debank, error) {
 	factory := NewFactory(cfg)
 	return factory.CreateDebank()
 }
 
-// GetTotalBalance возвращает общий баланс пользователя в USD.
 func (d *Debank) GetTotalBalance(address string) (float64, error) {
 	var resp *debankModels.UserResponse
 	if err := d.baseChecker.MakeRequest(
@@ -41,7 +39,6 @@ func (d *Debank) GetTotalBalance(address string) (float64, error) {
 	return resp.Data.User.Desc.UsdValue, nil
 }
 
-// GetUsedChains возвращает список использованных пользователем цепочек.
 func (d *Debank) GetUsedChains(address string) ([]string, error) {
 	if chains, ok := d.cache.GetChainsCache(address); ok {
 		return chains, nil
@@ -63,8 +60,7 @@ func (d *Debank) GetUsedChains(address string) ([]string, error) {
 	return resp.Data.Chains, nil
 }
 
-// GetTokenBalanceList возвращает список токенов пользователя по цепочке.
-func (d *Debank) GetTokenBalanceList(address, chain string) (*debankModels.TokenBalanceListResponse, error) {
+func (d *Debank) GetTokenBalanceList(address, chain string) ([]*commonModels.TokenInfo, error) {
 	var resp *debankModels.TokenBalanceListResponse
 	if err := d.baseChecker.MakeRequest(
 		"token_balance_list",
@@ -81,11 +77,16 @@ func (d *Debank) GetTokenBalanceList(address, chain string) (*debankModels.Token
 		return nil, err
 	}
 	logger.GlobalLogger.Debugf("token balance list: %+v", resp)
-	return resp, nil
+
+	result := make([]*commonModels.TokenInfo, 0, len(resp.Data))
+	for _, token := range resp.Data {
+		result = append(result, convertToCommonToken(&token))
+	}
+
+	return result, nil
 }
 
-// GetProjectAssets возвращает список активов пользователя по проектам.
-func (d *Debank) GetProjectAssets(address string) ([]*debankModels.ProjectAssets, error) {
+func (d *Debank) GetProjectAssets(address string) ([]*commonModels.ProjectAssets, error) {
 	var resp *debankModels.ProjectListResponse
 	if err := d.baseChecker.MakeRequest(
 		"project_list",
@@ -98,18 +99,45 @@ func (d *Debank) GetProjectAssets(address string) ([]*debankModels.ProjectAssets
 		return nil, err
 	}
 
-	return d.extractProjectAssets(resp)
-}
-
-func (d *Debank) extractProjectAssets(resp *debankModels.ProjectListResponse) ([]*debankModels.ProjectAssets, error) {
-	if len(resp.Data) == 0 {
-		logger.GlobalLogger.Debugf("project list is empty")
-		return make([]*debankModels.ProjectAssets, 0), nil
+	debankAssets, err := d.extractProjectAssets(resp)
+	if err != nil {
+		return nil, err
 	}
 
-	projectAssets := make([]*debankModels.ProjectAssets, 0, len(resp.Data))
+	result := make([]*commonModels.ProjectAssets, 0, len(debankAssets))
+	for _, asset := range debankAssets {
+		commonAsset := &commonModels.ProjectAssets{
+			ProjectName: asset.ProjectName,
+			SiteUrl:     asset.SiteUrl,
+			Chain:       asset.Chain,
+			Assets:      make([]*commonModels.TokenInfo, 0, len(asset.Assets)),
+		}
+
+		for _, token := range asset.Assets {
+			commonAsset.Assets = append(commonAsset.Assets, &commonModels.TokenInfo{
+				Amount: token.Amount,
+				Chain:  token.Chain,
+				ID:     token.ID,
+				Price:  token.Price,
+				Symbol: token.Symbol,
+			})
+		}
+
+		result = append(result, commonAsset)
+	}
+
+	return result, nil
+}
+
+func (d *Debank) extractProjectAssets(resp *debankModels.ProjectListResponse) ([]*commonModels.ProjectAssets, error) {
+	if len(resp.Data) == 0 {
+		logger.GlobalLogger.Debugf("project list is empty")
+		return make([]*commonModels.ProjectAssets, 0), nil
+	}
+
+	projectAssets := make([]*commonModels.ProjectAssets, 0, len(resp.Data))
 	for _, project := range resp.Data {
-		assets := &debankModels.ProjectAssets{
+		assets := &commonModels.ProjectAssets{
 			ProjectName: project.Name,
 			SiteUrl:     project.SiteURL,
 			Chain:       project.Chain,
@@ -117,8 +145,7 @@ func (d *Debank) extractProjectAssets(resp *debankModels.ProjectListResponse) ([
 
 		for _, portfolioItem := range project.PortfolioItemList {
 			for _, token := range portfolioItem.AssetTokenList {
-				tokenCopy := token
-				assets.Assets = append(assets.Assets, &tokenCopy)
+				assets.Assets = append(assets.Assets, convertToCommonToken(&token))
 			}
 		}
 
@@ -128,4 +155,14 @@ func (d *Debank) extractProjectAssets(resp *debankModels.ProjectListResponse) ([
 	}
 
 	return projectAssets, nil
+}
+
+func convertToCommonToken(token *debankModels.TokenInfo) *commonModels.TokenInfo {
+	return &commonModels.TokenInfo{
+		Amount: token.Amount,
+		Chain:  token.Chain,
+		ID:     token.ID,
+		Price:  token.Price,
+		Symbol: token.Symbol,
+	}
 }

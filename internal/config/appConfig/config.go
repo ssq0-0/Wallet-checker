@@ -7,10 +7,11 @@ type Config struct {
 }
 
 type Checkers struct {
-	Debank *DebankSettings `json:"debank" mapstructure:"debank"`
+	Debank *CheckerSettings `json:"debank" mapstructure:"debank"`
+	Rabby  *CheckerSettings `json:"rabby" mapstructure:"rabby"`
 }
 
-type DebankSettings struct {
+type CheckerSettings struct {
 	BaseURL         string            `json:"base_url" mapstructure:"base_url"`
 	Endpoints       map[string]string `json:"endpoints" mapstructure:"endpoints"`
 	UseProxyPool    bool              `json:"use_proxy_pool" mapstructure:"use_proxy_pool"`

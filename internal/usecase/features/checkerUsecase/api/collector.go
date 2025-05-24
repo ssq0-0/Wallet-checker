@@ -3,7 +3,7 @@ package api
 import (
 	"chief-checker/internal/domain/account"
 	service "chief-checker/internal/service/checkers"
-	"chief-checker/internal/service/checkers/checkerModels/debankModels"
+	"chief-checker/internal/service/checkers/checkerModels/commonModels"
 	"chief-checker/internal/usecase/features/checkerUsecase/interfaces"
 	"chief-checker/internal/usecase/features/checkerUsecase/types"
 	"chief-checker/pkg/errors"
@@ -66,11 +66,11 @@ func (c *DataCollector) collectData(ctx context.Context, acc *account.Account) (
 	}, nil
 }
 
-func (c *DataCollector) collectChainsAndProjects(ctx context.Context, address string) (map[string][]*types.TokenChainInfo, []*debankModels.ProjectAssets, error) {
+func (c *DataCollector) collectChainsAndProjects(ctx context.Context, address string) (map[string][]*types.TokenChainInfo, []*commonModels.ProjectAssets, error) {
 	var wg sync.WaitGroup
 	results := make(chan struct {
 		chainsInfo   map[string][]*types.TokenChainInfo
-		projectsInfo []*debankModels.ProjectAssets
+		projectsInfo []*commonModels.ProjectAssets
 		err          error
 	}, 2)
 
@@ -80,7 +80,7 @@ func (c *DataCollector) collectChainsAndProjects(ctx context.Context, address st
 		chainsInfo, err := c.getChainInfo(ctx, address)
 		results <- struct {
 			chainsInfo   map[string][]*types.TokenChainInfo
-			projectsInfo []*debankModels.ProjectAssets
+			projectsInfo []*commonModels.ProjectAssets
 			err          error
 		}{chainsInfo: chainsInfo, err: err}
 	}()
@@ -91,7 +91,7 @@ func (c *DataCollector) collectChainsAndProjects(ctx context.Context, address st
 		projectsInfo, err := c.getProjectsInfo(ctx, address)
 		results <- struct {
 			chainsInfo   map[string][]*types.TokenChainInfo
-			projectsInfo []*debankModels.ProjectAssets
+			projectsInfo []*commonModels.ProjectAssets
 			err          error
 		}{projectsInfo: projectsInfo, err: err}
 	}()
@@ -103,7 +103,7 @@ func (c *DataCollector) collectChainsAndProjects(ctx context.Context, address st
 
 	var (
 		chainsInfo   = make(map[string][]*types.TokenChainInfo)
-		projectsInfo = make([]*debankModels.ProjectAssets, 0)
+		projectsInfo = make([]*commonModels.ProjectAssets, 0)
 		firstErr     error
 	)
 
@@ -201,8 +201,8 @@ func (c *DataCollector) processSingleChain(ctx context.Context, address string, 
 		return nil, errors.Wrap(err, "failed to get token balance list")
 	}
 
-	result := make([]*types.TokenChainInfo, 0, len(chainData.Data))
-	for _, token := range chainData.Data {
+	result := make([]*types.TokenChainInfo, 0, len(chainData))
+	for _, token := range chainData {
 		result = append(result, &types.TokenChainInfo{
 			Amount:   token.Amount,
 			Chain:    token.Chain,
@@ -216,7 +216,7 @@ func (c *DataCollector) processSingleChain(ctx context.Context, address string, 
 	return result, nil
 }
 
-func (c *DataCollector) getProjectsInfo(ctx context.Context, address string) ([]*debankModels.ProjectAssets, error) {
+func (c *DataCollector) getProjectsInfo(ctx context.Context, address string) ([]*commonModels.ProjectAssets, error) {
 	projectsResult, err := c.retryFunc(ctx, "GetProjectAssets", address, func() (interface{}, error) {
 		return c.checkerService.GetProjectAssets(address)
 	})
@@ -224,7 +224,7 @@ func (c *DataCollector) getProjectsInfo(ctx context.Context, address string) ([]
 		return nil, errors.Wrap(err, "failed to get projects")
 	}
 
-	projects := projectsResult.([]*debankModels.ProjectAssets)
+	projects := projectsResult.([]*commonModels.ProjectAssets)
 	c.errorCollector.SaveError(address, fmt.Sprintf("found %d projects", len(projects)))
 	return projects, nil
 }

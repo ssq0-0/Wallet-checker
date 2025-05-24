@@ -2,7 +2,7 @@
 // It includes both raw and aggregated data structures for blockchain account information.
 package types
 
-import "chief-checker/internal/service/checkers/checkerModels/debankModels"
+import "chief-checker/internal/service/checkers/checkerModels/commonModels"
 
 // RawAccountData represents the raw data collected from blockchain services.
 // It contains the total balance and detailed information about tokens across chains.
@@ -14,7 +14,7 @@ type RawAccountData struct {
 	ChainsInfo map[string][]*TokenChainInfo
 
 	// ProjectsInfo contains information about DeFi projects and their assets
-	ProjectsInfo []*debankModels.ProjectAssets
+	ProjectsInfo []*commonModels.ProjectAssets
 }
 
 // TokenChainInfo represents detailed information about a token on a specific chain.

@@ -1,7 +1,7 @@
 package processing
 
 import (
-	"chief-checker/internal/service/checkers/checkerModels/debankModels"
+	"chief-checker/internal/service/checkers/checkerModels/commonModels"
 	"chief-checker/internal/usecase/features/checkerUsecase/interfaces"
 	"chief-checker/internal/usecase/features/checkerUsecase/types"
 	"sync"
@@ -58,7 +58,7 @@ func (a *DataAggregatorImpl) AggregateAccountData(address string, data *types.Ra
 	}, nil
 }
 
-func (a *DataAggregatorImpl) projectDataAggregate(data []*debankModels.ProjectAssets) []*types.ProjectInfo {
+func (a *DataAggregatorImpl) projectDataAggregate(data []*commonModels.ProjectAssets) []*types.ProjectInfo {
 	projectData := make([]*types.ProjectInfo, 0, len(data))
 
 	for _, project := range data {

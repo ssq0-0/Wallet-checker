@@ -2,7 +2,7 @@
 package checkers
 
 import (
-	"chief-checker/internal/config/serviceConfig/debankConfig"
+	"chief-checker/internal/config/serviceConfig"
 	"chief-checker/internal/infrastructure/wasmClient"
 	"chief-checker/internal/service/checkers/adapters"
 	"chief-checker/pkg/errors"
@@ -11,12 +11,12 @@ import (
 // Factory is responsible for creating checker instances.
 // It ensures proper initialization of all dependencies and configurations.
 type Factory struct {
-	config *debankConfig.DebankConfig
+	config *serviceConfig.ApiCheckerConfig
 }
 
 // NewFactory creates a new instance of Factory with the provided configuration.
 // It validates the configuration before creating the factory.
-func NewFactory(cfg *debankConfig.DebankConfig) *Factory {
+func NewFactory(cfg *serviceConfig.ApiCheckerConfig) *Factory {
 	return &Factory{
 		config: cfg,
 	}
@@ -46,5 +46,27 @@ func (f *Factory) CreateDebank() (*Debank, error) {
 		baseChecker: baseApiClient,
 		cache:       cache,
 		ctxDeadline: f.config.ContextDeadline,
+	}, nil
+}
+
+func (f *Factory) CreateRabby() (*Rabby, error) {
+	wasmClient, err := wasmClient.NewWasm()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create wasm client")
+	}
+
+	idGenerator := adapters.NewIDGenerator()
+	paramGenerator := adapters.NewParamGenerator(idGenerator, wasmClient)
+	cache := adapters.NewMemoryCache()
+
+	baseApiClient := adapters.NewApiChecker(f.config.BaseURL, f.config.Endpoints, f.config.HttpClient, cache, paramGenerator, f.config.ContextDeadline)
+
+	return &Rabby{
+		baseChecker: baseApiClient,
+		cache:       cache,
+		ctxDeadline: f.config.ContextDeadline,
+		httpClient:  f.config.HttpClient,
+		endpoints:   f.config.Endpoints,
+		baseUrl:     f.config.BaseURL,
 	}, nil
 }

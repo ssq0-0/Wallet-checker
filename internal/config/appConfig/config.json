@@ -10,8 +10,21 @@
                 "token_balance_list":"/token/balance_list?user_addr=%s&chain=%s",
                 "project_list":"/portfolio/project_list?user_addr=%s"
             },
-            "rotate_proxy": false,
-            "use_proxy_pool": true,
+            "rotate_proxy": true,
+            "use_proxy_pool": false,
+            "proxy_file_path": "",
+            "deadline_request": 30
+        },
+        "rabby":{
+            "base_url":"https://api.rabby.io",
+            "endpoints": {
+                "total_balance":"/v1/user/total_balance?id=%s&is_core=true",
+                "used_chains":"/v1/user/used_chain_list?id=%s",
+                "token_balance_list":"/v1/user/token_list?id=%s&is_all=true&chain_id=%s",
+                "project_list":"/v1/user/complex_protocol_list?id=%s"
+            },
+            "rotate_proxy": true,
+            "use_proxy_pool": false,
             "proxy_file_path": "",
             "deadline_request": 30
         }

@@ -18,7 +18,7 @@ const (
 
 var (
 	serviceOptions = []string{"API Checker"}
-	checkerOptions = []string{"debank"}
+	checkerOptions = []string{"debank", "rabby"}
 )
 
 // baseSelect provides a basic single-choice selection interface.

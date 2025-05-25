@@ -3,7 +3,7 @@ package checkers
 
 import (
 	"chief-checker/internal/config/appConfig"
-	"chief-checker/internal/config/serviceConfig/debankConfig"
+	"chief-checker/internal/config/serviceConfig"
 	"chief-checker/internal/infrastructure/httpClient/client"
 	"chief-checker/internal/infrastructure/httpClient/httpConfig"
 	"chief-checker/internal/infrastructure/proxyPool"
@@ -23,7 +23,7 @@ import (
 // Returns:
 // - *debankConfig.DebankConfig: initialized configuration
 // - error: if initialization fails
-func InitDebankConfig(cfg *appConfig.DebankSettings) (*debankConfig.DebankConfig, error) {
+func InitDebankConfig(cfg *appConfig.CheckerSettings) (*serviceConfig.ApiCheckerConfig, error) {
 	if ok, err := validateDebankParam(cfg); !ok {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func InitDebankConfig(cfg *appConfig.DebankSettings) (*debankConfig.DebankConfig
 
 	httpClient := client.NewHttpClient(proxyPool, cfgHttp)
 
-	return &debankConfig.DebankConfig{
+	return &serviceConfig.ApiCheckerConfig{
 		BaseURL:         cfg.BaseURL,
 		Endpoints:       cfg.Endpoints,
 		ContextDeadline: cfg.ContextDeadline,
@@ -72,7 +72,7 @@ func InitDebankConfig(cfg *appConfig.DebankSettings) (*debankConfig.DebankConfig
 // Returns:
 // - bool: true if configuration is valid
 // - error: description of validation failure
-func validateDebankParam(cfg *appConfig.DebankSettings) (bool, error) {
+func validateDebankParam(cfg *appConfig.CheckerSettings) (bool, error) {
 	if cfg == nil {
 		return false, errors.Wrap(errors.ErrValueEmpty, "debank settings is nil")
 	}
@@ -151,4 +151,40 @@ func initProxyPool(proxyList []string) (proxyPool.ProxyPool, error) {
 		return nil, errors.Wrap(errors.ErrFailedInit, err.Error())
 	}
 	return proxyPool, nil
+}
+
+func InitRabbyConfig(cfg *appConfig.CheckerSettings) (*serviceConfig.ApiCheckerConfig, error) {
+	proxyList, err := initProxies(cfg.ProxyFilePath, cfg.RotateProxy)
+	if err != nil {
+		return nil, err
+	}
+
+	proxyPool, err := initProxyPool(proxyList)
+	if err != nil {
+		return nil, err
+	}
+	cfgHttp := httpConfig.Config{
+		Timeout:         30 * time.Second,
+		MaxRetries:      5,
+		RetryDelay:      3 * time.Second,
+		UseProxyPool:    cfg.UseProxyPool,
+		IsRotatingProxy: cfg.RotateProxy,
+		BlockTime:       10 * time.Second,
+		BrowserHeaders:  true,
+		RandomizeTLS:    true,
+		ClientHints:     true,
+		SkipHeaders:     map[string]bool{"sec-ch-ua": true, "sec-ch-ua-mobile": true, "sec-ch-ua-platform": true},
+		UseUTLS:         false,
+		UTLSClientID:    "Chrome_112",
+		Servername:      "api.rabby.io",
+	}
+
+	httpClient := client.NewHttpClient(proxyPool, cfgHttp)
+
+	return &serviceConfig.ApiCheckerConfig{
+		BaseURL:         cfg.BaseURL,
+		Endpoints:       cfg.Endpoints,
+		ContextDeadline: cfg.ContextDeadline,
+		HttpClient:      httpClient,
+	}, nil
 }

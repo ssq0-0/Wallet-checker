@@ -10,6 +10,7 @@ Chief Checker - это мощный инструмент, разработанн
 
 ### Возможности
 - Debank парсер. Собирает всю информацию о кошельке и записывает в файл в формате (общий баланс - баласн по каждой используемой сети - балансы в пулах ликвидности), в конце подводит общую статистику по общему балансу в usd и в каждом токене.
+- Rabby парсер. Делает все тоже самое, что и Debank.
 
 ### Установка
 ```bash
@@ -78,7 +79,7 @@ go build -o chief-checker cmd/main.go
 
 #### Параметры чекеров
 ##### DeBank
-- `base_url` (string): Базовый URL API DeBank
+- `base_url` (string): Базовый URL API
 - `endpoints` (object): Конфигурация эндпоинтов API
   - `user_info`: Получение информации о пользователе
   - `used_chains`: Получение списка используемых блокчейнов
@@ -110,6 +111,7 @@ Chief Checker is a powerful tool designed for checking and analyzing various asp
 
 ### Features
 - DeBank parser. Collects all wallet information and writes it to a file in a format (total balance - balance by each used network - balances in liquidity pools), and provides overall statistics on total balance in USD and in each token.
+- Rabby parser. Identical to Debank module
 
 ### Installation
 ```bash
@@ -178,7 +180,7 @@ Configuration of the application is located in the file `internal/config/appConf
 
 #### Checker Parameters
 ##### DeBank
-- `base_url` (string): Base URL of the DeBank API
+- `base_url` (string): Base URL of the API
 - `endpoints` (object): Configuration of the API endpoints
   - `user_info`: Getting user information
   - `used_chains`: Getting the list of used blockchains

@@ -18,5 +18,19 @@ type ApiClient interface {
 	//
 	// Returns:
 	// - error: if the request fails or response processing fails
-	MakeRequest(endpointKey string, method string, path string, payload map[string]string, result interface{}, urlParams ...string) error
+	MakeRequest(endpointKey, method, path string, payload map[string]string, result interface{}, urlParams ...string) error
+
+	// MakeSimpleRequest performs a simplified HTTP request without additional headers and path.
+	// It's used for basic API calls that don't require authentication or special headers.
+	//
+	// Parameters:
+	// - endpointKey: identifier for the endpoint configuration
+	// - method: HTTP method (GET, POST, etc.)
+	// - payload: request parameters
+	// - result: pointer to store the response
+	// - urlParams: optional URL parameters for endpoint formatting
+	//
+	// Returns:
+	// - error: if the request fails or response processing fails
+	MakeSimpleRequest(endpointKey, method string, payload map[string]string, result interface{}, urlParams ...string) error
 }

@@ -145,7 +145,12 @@ func (h *CheckerHandler) Handle() error {
 	if err := h.resultWriter.Close(); err != nil {
 		return err
 	}
-	logger.GlobalLogger.Infof("Global stats: %+v", h.aggregator.GetGlobalStats())
+	localStats := h.aggregator.GetGlobalStats()
+
+	logger.GlobalLogger.Infof("Statistics summary:")
+	logger.GlobalLogger.Infof("- Total accounts: %d", localStats.TotalAccounts)
+	logger.GlobalLogger.Infof("- Total USD value: $%.2f", localStats.TotalUsdValue)
+
 	return nil
 }
 

@@ -43,12 +43,12 @@ cd /Wallet-checker
 - `socks5://host:port:user:pass`
 
 # Собрать проект
-go build -o chief-checker cmd/main.go
+go build -o Wallet-checker cmd/main.go
 ```
 
 ### Запуск приложения
 ```bash
-./chief-checker
+./Wallet-checker
 ```
 
 ### Технические детали
@@ -144,12 +144,12 @@ cd Wallet-checker
 - `socks5://host:port:user:pass`
 
 # Build the project
-go build -o chief-checker cmd/main.go
+go build -o Wallet-checker cmd/main.go
 ```
 
 ### Running the Application
 ```bash
-./chief-checker
+./Wallet-checker
 ```
 
 ### Technical Details

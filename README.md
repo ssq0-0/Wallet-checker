@@ -15,10 +15,10 @@ Chief Checker - это мощный инструмент, разработанн
 ### Установка
 ```bash
 # Клонировать репозиторий
-git clone https://github.com/ssq0-0/chief-checker.git
+git clone https://github.com/ssq0-0/Wallet-checker.git
 
 # Перейти в директорию проекта
-cd chief-checker
+cd /Wallet-checker
 
 # Настроить конфигурацию(см. ниже)
 - При использовании ротационных прокси поставить true возле rotate_proxy. В таком случае в параметрах use_proxy_pool - false
@@ -116,10 +116,10 @@ Chief Checker is a powerful tool designed for checking and analyzing various asp
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/ssq0-0/chief-checker.git
+git clone https://github.com/ssq0-0/Wallet-checker.git
 
 # Navigate to the project directory
-cd chief-checker
+cd Wallet-checker
 
 # Configure the application (see below)
 - For rotating proxies, set `rotate_proxy` to true and `use_proxy_pool` to false.

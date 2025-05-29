@@ -3,9 +3,7 @@ package checkers
 
 import (
 	"chief-checker/internal/config/serviceConfig"
-	"chief-checker/internal/infrastructure/wasmClient"
 	"chief-checker/internal/service/checkers/adapters"
-	"chief-checker/pkg/errors"
 )
 
 // Factory is responsible for creating checker instances.
@@ -31,13 +29,8 @@ func NewFactory(cfg *serviceConfig.ApiCheckerConfig) *Factory {
 //
 // Returns an error if any dependency initialization fails.
 func (f *Factory) CreateDebank() (*Debank, error) {
-	wasmClient, err := wasmClient.NewWasm()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create wasm client")
-	}
-
 	idGenerator := adapters.NewIDGenerator()
-	paramGenerator := adapters.NewParamGenerator(idGenerator, wasmClient)
+	paramGenerator := adapters.NewParamGeneratorImpl(idGenerator)
 	cache := adapters.NewMemoryCache()
 
 	baseApiClient := adapters.NewApiChecker(f.config.BaseURL, f.config.Endpoints, f.config.HttpClient, cache, paramGenerator, f.config.ContextDeadline)
@@ -50,13 +43,8 @@ func (f *Factory) CreateDebank() (*Debank, error) {
 }
 
 func (f *Factory) CreateRabby() (*Rabby, error) {
-	wasmClient, err := wasmClient.NewWasm()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create wasm client")
-	}
-
 	idGenerator := adapters.NewIDGenerator()
-	paramGenerator := adapters.NewParamGenerator(idGenerator, wasmClient)
+	paramGenerator := adapters.NewParamGeneratorImpl(idGenerator)
 	cache := adapters.NewMemoryCache()
 
 	baseApiClient := adapters.NewApiChecker(f.config.BaseURL, f.config.Endpoints, f.config.HttpClient, cache, paramGenerator, f.config.ContextDeadline)

@@ -102,7 +102,7 @@ func validateDebankParam(cfg *appConfig.CheckerSettings) (bool, error) {
 // - []string: list of validated proxy strings
 // - error: if reading or parsing fails
 func initProxies(proxyFilePath string, rotateProxy bool) ([]string, error) {
-	proxylist, err := utils.ReadProxyList(proxyFilePath)
+	proxylist, err := utils.FileReader(proxyFilePath)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrFailedInit, err.Error())
 	}

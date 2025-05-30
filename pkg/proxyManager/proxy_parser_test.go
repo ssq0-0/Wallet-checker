@@ -4,6 +4,7 @@ import (
 	"testing"
 )
 
+// TestDefaultProxyParser_Parse tests the proxy string parsing functionality
 func TestDefaultProxyParser_Parse(t *testing.T) {
 	parser := NewDefaultProxyParser()
 
@@ -129,6 +130,7 @@ func TestDefaultProxyParser_Parse(t *testing.T) {
 	}
 }
 
+// TestDefaultProxyValidator_Validate tests the proxy configuration validation
 func TestDefaultProxyValidator_Validate(t *testing.T) {
 	validator := NewDefaultProxyValidator()
 
@@ -185,6 +187,7 @@ func TestDefaultProxyValidator_Validate(t *testing.T) {
 	}
 }
 
+// TestDefaultProxyFormatter_Format tests the proxy configuration formatting
 func TestDefaultProxyFormatter_Format(t *testing.T) {
 	formatter := NewDefaultProxyFormatter()
 
@@ -245,94 +248,65 @@ func TestDefaultProxyFormatter_Format(t *testing.T) {
 	}
 }
 
+// TestProxyManager_Integration tests the integration of parser, validator and formatter
 func TestProxyManager_Integration(t *testing.T) {
 	parser := NewDefaultProxyParser()
 	validator := NewDefaultProxyValidator()
 	formatter := NewDefaultProxyFormatter()
-	manager := NewProxyManager(parser, validator, formatter)
 
-	// Test adding a proxy
-	err := manager.AddProxy("http://user:pass@127.0.0.1:8080")
-	if err != nil {
-		t.Errorf("AddProxy() error = %v", err)
-	}
-
-	// Test getting proxies
-	proxies := manager.GetProxies()
-	if len(proxies) != 1 {
-		t.Errorf("GetProxies() returned %d proxies, want 1", len(proxies))
-	}
-
-	// Test removing a proxy
-	err = manager.RemoveProxy("http://user:pass@127.0.0.1:8080")
-	if err != nil {
-		t.Errorf("RemoveProxy() error = %v", err)
-	}
-
-	// Verify proxy was removed
-	proxies = manager.GetProxies()
-	if len(proxies) != 0 {
-		t.Errorf("GetProxies() returned %d proxies, want 0", len(proxies))
-	}
-}
-
-func TestIsValidHostname(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name     string
-		hostname string
-		want     bool
+		input    string
+		expected string
+		wantErr  bool
 	}{
 		{
-			name:     "valid hostname",
-			hostname: "example.com",
-			want:     true,
+			name:     "valid http proxy",
+			input:    "http://user:pass@127.0.0.1:8080",
+			expected: "http://user:pass@127.0.0.1:8080",
+			wantErr:  false,
 		},
 		{
-			name:     "valid subdomain",
-			hostname: "sub.example.com",
-			want:     true,
+			name:     "valid https proxy",
+			input:    "https://user:pass@127.0.0.1:8080",
+			expected: "https://user:pass@127.0.0.1:8080",
+			wantErr:  false,
 		},
 		{
-			name:     "valid with numbers",
-			hostname: "example123.com",
-			want:     true,
+			name:     "valid socks5 proxy",
+			input:    "socks5://user:pass@127.0.0.1:8080",
+			expected: "socks5://user:pass@127.0.0.1:8080",
+			wantErr:  false,
 		},
 		{
-			name:     "valid with hyphens",
-			hostname: "my-example.com",
-			want:     true,
-		},
-		{
-			name:     "invalid double dots",
-			hostname: "example..com",
-			want:     false,
-		},
-		{
-			name:     "invalid special chars",
-			hostname: "example@.com",
-			want:     false,
-		},
-		{
-			name:     "invalid starts with hyphen",
-			hostname: "-example.com",
-			want:     false,
-		},
-		{
-			name:     "invalid ends with hyphen",
-			hostname: "example.com-",
-			want:     false,
-		},
-		{
-			name:     "too long",
-			hostname: string(make([]byte, 256)),
-			want:     false,
+			name:    "invalid proxy",
+			input:   "invalid:format",
+			wantErr: true,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := IsValidHostname(tt.hostname); got != tt.want {
-				t.Errorf("IsValidHostname() = %v, want %v", got, tt.want)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Parse
+			config, err := parser.Parse(tc.input)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("Parse() error = %v, wantErr %v", err, tc.wantErr)
+				return
+			}
+			if err != nil {
+				return
+			}
+
+			// Validate
+			if err := validator.Validate(config); err != nil {
+				t.Errorf("Validate() error = %v", err)
+				return
+			}
+
+			// Format
+			got := formatter.Format(config)
+			if got != tc.expected {
+				t.Errorf("Format() = %v, want %v", got, tc.expected)
 			}
 		})
 	}

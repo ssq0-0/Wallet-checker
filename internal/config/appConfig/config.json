@@ -1,7 +1,10 @@
 {
-    "concurrency":40,
+    "concurrency":1,
     "logger_level":"info",
+    "server_port":"8080",
     "checkers_params":{
+        "address_file_path":"",
+        "proxy_file_path":"",
         "debank":{
             "base_url":"https://api.debank.com",
             "endpoints": {
@@ -12,7 +15,6 @@
             },
             "rotate_proxy": true,
             "use_proxy_pool": false,
-            "proxy_file_path": "",
             "deadline_request": 30
         },
         "rabby":{
@@ -25,7 +27,6 @@
             },
             "rotate_proxy": true,
             "use_proxy_pool": false,
-            "proxy_file_path": "",
             "deadline_request": 30
         }
     }

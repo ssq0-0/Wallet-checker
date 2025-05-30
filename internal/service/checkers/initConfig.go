@@ -23,12 +23,12 @@ import (
 // Returns:
 // - *debankConfig.DebankConfig: initialized configuration
 // - error: if initialization fails
-func InitDebankConfig(cfg *appConfig.CheckerSettings) (*serviceConfig.ApiCheckerConfig, error) {
+func InitDebankConfig(cfg *appConfig.CheckerSettings, proxyFilePath string) (*serviceConfig.ApiCheckerConfig, error) {
 	if ok, err := validateDebankParam(cfg); !ok {
 		return nil, err
 	}
 
-	proxyList, err := initProxies(cfg.ProxyFilePath, cfg.RotateProxy)
+	proxyList, err := initProxies(proxyFilePath, cfg.RotateProxy)
 	if err != nil {
 		return nil, err
 	}
@@ -75,10 +75,6 @@ func InitDebankConfig(cfg *appConfig.CheckerSettings) (*serviceConfig.ApiChecker
 func validateDebankParam(cfg *appConfig.CheckerSettings) (bool, error) {
 	if cfg == nil {
 		return false, errors.Wrap(errors.ErrValueEmpty, "debank settings is nil")
-	}
-
-	if cfg.ProxyFilePath == "" {
-		return false, errors.Wrap(errors.ErrValueEmpty, "proxy file path is required")
 	}
 
 	if cfg.BaseURL == "" {
@@ -153,8 +149,8 @@ func initProxyPool(proxyList []string) (proxyPool.ProxyPool, error) {
 	return proxyPool, nil
 }
 
-func InitRabbyConfig(cfg *appConfig.CheckerSettings) (*serviceConfig.ApiCheckerConfig, error) {
-	proxyList, err := initProxies(cfg.ProxyFilePath, cfg.RotateProxy)
+func InitRabbyConfig(cfg *appConfig.CheckerSettings, proxyFilePath string) (*serviceConfig.ApiCheckerConfig, error) {
+	proxyList, err := initProxies(proxyFilePath, cfg.RotateProxy)
 	if err != nil {
 		return nil, err
 	}

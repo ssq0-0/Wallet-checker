@@ -177,11 +177,6 @@ func CreateSystem(config *usecaseConfig.CheckerHandlerConfig) (*CheckerHandler, 
 		return nil, err
 	}
 
-	pathToAddresses, err := selector.SelectFilePath("Введите путь к файлу с адресами для проверки:")
-	if err != nil {
-		return nil, err
-	}
-
 	minUsdAmount, err := selector.SelectAmount("Введите минимальную сумму в USD для отображения:")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get min usd amount")
@@ -205,7 +200,7 @@ func CreateSystem(config *usecaseConfig.CheckerHandlerConfig) (*CheckerHandler, 
 	processor := factory.CreateTaskProcessor(collector, aggregator, formatter)
 	scheduler := factory.CreateWorkerPool(processor)
 	handler, err := NewCheckerHandler(
-		pathToAddresses,
+		config.AddressFilePath,
 		scheduler,
 		aggregator,
 		resultWriter,

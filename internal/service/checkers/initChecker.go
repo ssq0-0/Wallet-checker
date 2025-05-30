@@ -25,13 +25,13 @@ type Checker interface {
 func InitChecker(checkerName string, cfg *appConfig.Checkers) (Checker, error) {
 	switch checkerName {
 	case "debank":
-		debankCfg, err := InitDebankConfig(cfg.Debank)
+		debankCfg, err := InitDebankConfig(cfg.Debank, cfg.ProxyFilePath)
 		if err != nil {
 			return nil, err
 		}
 		return NewDebank(debankCfg)
 	case "rabby":
-		rabbyCfg, err := InitRabbyConfig(cfg.Rabby)
+		rabbyCfg, err := InitRabbyConfig(cfg.Rabby, cfg.ProxyFilePath)
 		if err != nil {
 			return nil, err
 		}

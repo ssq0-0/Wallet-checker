@@ -38,7 +38,7 @@ cd /Wallet-checker
 - `https://host:port@user:pass`
 - `https://host:port:user:pass`
 - `socks5://user:pass@host:port`
-- `socks5://user:pass@host:port`
+- `socks5://user:pass:host:port`
 - `socks5://host:port@user:pass`
 - `socks5://host:port:user:pass`
 
@@ -47,6 +47,11 @@ go build -o Wallet-checker cmd/main.go
 ```
 
 ### Запуск приложения
+При запуске приложения вам будет предложено:
+1. Выбрать сервис для проверки (Debank или Rabby)
+2. Решить, нужен ли вам веб-сервер для отображения результатов
+3. Указать минимальную сумму в USD для отображения результатов
+
 ```bash
 ./Wallet-checker
 ```
@@ -74,10 +79,14 @@ go build -o Wallet-checker cmd/main.go
 Конфигурация приложения находится в файле `internal/config/appConfig/config.json`. Вот подробное описание параметров:
 
 #### Основные параметры
-- `concurrency` (int): Количество конкурентных функций для обработки запросов(**грубо** говоря - потоков)
+- `concurrency` (int): Количество конкурентных функций для обработки запросов
 - `logger_level` (string): Уровень логирования (debug, info, warn, error)
+- `server_port` (string): Порт для веб-сервера (если включен)
 
 #### Параметры чекеров
+- `address_file_path` (string): Путь к файлу с адресами для проверки
+- `proxy_file_path` (string): Путь к файлу с прокси
+
 ##### DeBank
 - `base_url` (string): Базовый URL API
 - `endpoints` (object): Конфигурация эндпоинтов API
@@ -87,8 +96,17 @@ go build -o Wallet-checker cmd/main.go
   - `project_list`: Получение списка проектов в портфолио
 - `rotate_proxy` (boolean): Использование ротационных прокси
 - `use_proxy_pool` (boolean): Использование пула прокси
-- `reuse_proxy` (boolean): Повторное использование прокси
-- `proxy_file_path` (string): Путь к файлу с прокси
+- `deadline_request` (int): Таймаут запросов в секундах
+
+##### Rabby
+- `base_url` (string): Базовый URL API
+- `endpoints` (object): Конфигурация эндпоинтов API
+  - `total_balance`: Получение общего баланса
+  - `used_chains`: Получение списка используемых блокчейнов
+  - `token_balance_list`: Получение списка балансов токенов
+  - `project_list`: Получение списка проектов в портфолио
+- `rotate_proxy` (boolean): Использование ротационных прокси
+- `use_proxy_pool` (boolean): Использование пула прокси
 - `deadline_request` (int): Таймаут запросов в секундах
 
 ### Донаты
@@ -148,6 +166,11 @@ go build -o Wallet-checker cmd/main.go
 ```
 
 ### Running the Application
+When starting the application, you will be prompted to:
+1. Select a service to check (Debank or Rabby)
+2. Decide if you need a web server to display results
+3. Specify the minimum USD amount to display results
+
 ```bash
 ./Wallet-checker
 ```
@@ -175,10 +198,14 @@ go build -o Wallet-checker cmd/main.go
 Configuration of the application is located in the file `internal/config/appConfig/config.json`. Here is the detailed description of the parameters:
 
 #### Main Parameters
-- `concurrency` (int): Number of concurrent functions for processing requests (**grossly** speaking - threads)
+- `concurrency` (int): Number of concurrent functions for processing requests
 - `logger_level` (string): Logging level (debug, info, warn, error)
+- `server_port` (string): Port for web server (if enabled)
 
 #### Checker Parameters
+- `address_file_path` (string): Path to the file with addresses to check
+- `proxy_file_path` (string): Path to the file with proxies
+
 ##### DeBank
 - `base_url` (string): Base URL of the API
 - `endpoints` (object): Configuration of the API endpoints
@@ -188,8 +215,17 @@ Configuration of the application is located in the file `internal/config/appConf
   - `project_list`: Getting the list of projects in the portfolio
 - `rotate_proxy` (boolean): Rotation of proxies
 - `use_proxy_pool` (boolean): Using a proxy pool
-- `reuse_proxy` (boolean): Reusing proxies
-- `proxy_file_path` (string): Path to the proxy file
+- `deadline_request` (int): Request timeout in seconds
+
+##### Rabby
+- `base_url` (string): Base URL of the API
+- `endpoints` (object): Configuration of the API endpoints
+  - `total_balance`: Getting total balance
+  - `used_chains`: Getting the list of used blockchains
+  - `token_balance_list`: Getting the list of token balances
+  - `project_list`: Getting the list of projects in the portfolio
+- `rotate_proxy` (boolean): Rotation of proxies
+- `use_proxy_pool` (boolean): Using a proxy pool
 - `deadline_request` (int): Request timeout in seconds
 
 ### Donations

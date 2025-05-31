@@ -1,0 +1,242 @@
+
+.table-auto th {
+    @apply text-gray-700 font-semibold;
+}
+
+.table-auto td {
+    @apply border-t border-gray-200;
+}
+
+.table-auto tr:hover {
+    @apply bg-gray-50;
+}
+
+canvas {
+    max-height: 300px;
+}
+
+.sort-indicator {
+    display: inline-block;
+    transition: all 0.2s ease;
+    opacity: 0.5;
+    margin-left: 4px;
+    font-size: 14px;
+}
+
+th[data-sort] {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: background-color 0.2s ease;
+}
+
+th[data-sort]:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark th[data-sort]:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+th[data-sort].asc .sort-indicator {
+    transform: rotate(180deg);
+    opacity: 1;
+}
+
+th[data-sort].desc .sort-indicator {
+    opacity: 1;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.address-link {
+    @apply text-blue-600 hover:text-blue-800 transition-colors duration-200;
+    font-family: monospace;
+}
+
+.value-positive {
+    @apply text-green-600;
+}
+
+.value-negative {
+    @apply text-red-600;
+}
+
+.card {
+    @apply bg-white rounded-lg shadow-lg p-6 transition-all duration-200;
+}
+
+.card:hover {
+    @apply shadow-xl;
+}
+
+.table-container {
+    @apply overflow-x-auto rounded-lg shadow;
+}
+
+.section-title {
+    @apply text-2xl font-bold text-gray-800 mb-4;
+}
+
+.stat-value {
+    @apply text-3xl font-bold text-gray-900;
+}
+
+.stat-label {
+    @apply text-sm text-gray-500;
+}
+
+.expand-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    margin-right: 8px;
+    color: var(--text-color);
+    transition: transform 0.2s;
+}
+
+.expand-btn:hover {
+    transform: scale(1.1);
+}
+
+.details-row {
+    background-color: var(--bg-secondary);
+    transition: all 0.3s ease;
+}
+
+.details-content {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.tokens-section,
+.projects-section {
+    background-color: var(--bg-primary);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tokens-section h4,
+.projects-section h4 {
+    margin: 0 0 15px 0;
+    color: var(--text-color);
+    font-size: 1.1em;
+}
+
+.token-item,
+.project-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.token-item:last-child,
+.project-item:last-child {
+    border-bottom: none;
+}
+
+.token-symbol,
+.project-name {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.token-value,
+.project-value {
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: opacity 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.token-value,
+.project-value,
+td.text-right {
+    animation: fadeIn 0.3s ease;
+}
+
+.details-row {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .details-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.token-list, .project-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.token-list::-webkit-scrollbar, .project-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.token-list::-webkit-scrollbar-track, .project-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.token-list::-webkit-scrollbar-thumb, .project-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.token-list::-webkit-scrollbar-thumb:hover, .project-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.dark .token-list::-webkit-scrollbar-track,
+.dark .project-list::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+.dark .token-list::-webkit-scrollbar-thumb,
+.dark .project-list::-webkit-scrollbar-thumb {
+    background: #4b5563;
+}
+
+.dark .token-list::-webkit-scrollbar-thumb:hover,
+.dark .project-list::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+} 

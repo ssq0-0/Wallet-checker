@@ -45,29 +45,36 @@ func (u *UseCase) Run() error {
 
 	switch userSelect {
 	case "API Checker":
-		handler, err := u.initApiCheckerHandler()
-		if err != nil {
-			return err
-		}
-
 		needServer := u.serverNeed()
 
 		var srv serverInterface.Server
 		if needServer {
+			handler, err := u.initApiCheckerHandler()
+			if err != nil {
+				return err
+			}
+
 			serverHandler := serverHandler.NewServerHandler(
 				handler.GetAggregator(),
 				serverFormater.NewFormater(),
 			)
 			srv = server.NewServerHandler(serverHandler)
 			go srv.StartServer(u.config.ServerPort)
-		}
 
-		if err := handler.Handle(); err != nil {
-			return err
-		}
+			if err := handler.Handle(); err != nil {
+				return err
+			}
 
-		if needServer {
 			<-srv.Done()
+		} else {
+			handler, err := u.initApiCheckerHandler()
+			if err != nil {
+				return err
+			}
+
+			if err := handler.Handle(); err != nil {
+				return err
+			}
 		}
 
 		return nil

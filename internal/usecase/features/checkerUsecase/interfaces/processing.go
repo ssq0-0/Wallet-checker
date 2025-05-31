@@ -21,7 +21,7 @@ type DataAggregator interface {
 
 	// GetGlobalStats returns the current global statistics.
 	GetGlobalStats() *types.GlobalStats
-
+	GetAllStats() map[string]*types.AggregatedData
 	// SetMinUsdAmount updates the minimum USD amount filter.
 	SetMinUsdAmount(amount float64)
 }
@@ -30,7 +30,7 @@ type DataAggregator interface {
 // It provides fast access to token data and maintains token statistics.
 type TokenCache interface {
 	// Update adds or updates token information in the cache.
-	Update(symbol string, amount, usdValue float64)
+	Update(token *types.TokenInfo)
 
 	// Get retrieves information for a specific token.
 	// Returns nil if the token is not in the cache.
@@ -38,6 +38,19 @@ type TokenCache interface {
 
 	// GetAll returns all cached token information.
 	GetAll() map[string]*types.TokenInfo
+}
+
+// AccountStatCache defines the interface for caching account statistics.
+// It provides fast access to aggregated account data and maintains a collection
+// of all processed account statistics.
+type AccountStatCache interface {
+	// Update adds or updates aggregated data for a specific address in the cache.
+	// Returns an error if the update operation fails.
+	Update(address string, data *types.AggregatedData) error
+
+	// GetAllStats returns a map of all cached account statistics,
+	// where the key is the account address and the value is the aggregated data.
+	GetAllStats() map[string]*types.AggregatedData
 }
 
 // Formatter defines the interface for formatting data into human-readable output.

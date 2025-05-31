@@ -215,3 +215,8 @@ func (h *CheckerHandler) writeBatch(batch [][]string) {
 		h.writeErrMu.Unlock()
 	}
 }
+
+// GetAggregator returns the data aggregator used by the handler.
+func (h *CheckerHandler) GetAggregator() interfaces.DataAggregator {
+	return h.aggregator
+}

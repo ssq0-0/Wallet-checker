@@ -5,6 +5,10 @@ package usecase
 import (
 	"chief-checker/internal/config/appConfig"
 	"chief-checker/internal/config/usecaseConfig"
+	"chief-checker/internal/service/server"
+	"chief-checker/internal/service/server/serverFormater"
+	"chief-checker/internal/service/server/serverHandler"
+	"chief-checker/internal/service/server/serverInterface"
 	"chief-checker/internal/usecase/features/checkerUsecase"
 	"chief-checker/internal/usecase/selector"
 )
@@ -45,7 +49,28 @@ func (u *UseCase) Run() error {
 		if err != nil {
 			return err
 		}
-		return handler.Handle()
+
+		needServer := u.serverNeed()
+
+		var srv serverInterface.Server
+		if needServer {
+			serverHandler := serverHandler.NewServerHandler(
+				handler.GetAggregator(),
+				serverFormater.NewFormater(),
+			)
+			srv = server.NewServerHandler(serverHandler)
+			go srv.StartServer(u.config.ServerPort)
+		}
+
+		if err := handler.Handle(); err != nil {
+			return err
+		}
+
+		if needServer {
+			<-srv.Done()
+		}
+
+		return nil
 	}
 
 	return nil
@@ -61,7 +86,16 @@ func (u *UseCase) initApiCheckerHandler() (*checkerUsecase.CheckerHandler, error
 	checkerConfig := &usecaseConfig.CheckerHandlerConfig{
 		ThreadsCount:         u.config.Concurrency,
 		CheckerServiceConfig: &u.config.Checkers,
+		AddressFilePath:      u.config.Checkers.AddressFilePath,
 	}
 
 	return checkerUsecase.CreateSystem(checkerConfig)
+}
+
+func (u *UseCase) serverNeed() bool {
+	serverNeed, err := selector.SelectServer("Нужен ли сервер? (y/n)")
+	if err != nil {
+		return false
+	}
+	return serverNeed == "Да"
 }

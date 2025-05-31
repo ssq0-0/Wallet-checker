@@ -6,4 +6,5 @@ type Selector interface {
 	SelectAmount(message string) (float64, error)
 	SelectFilePath(message string) (string, error)
 	SelectNumber(message string) (int, error)
+	SelectServer(message string) (string, error)
 }

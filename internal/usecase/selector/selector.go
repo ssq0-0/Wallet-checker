@@ -18,6 +18,7 @@ const (
 
 var (
 	serviceOptions = []string{"API Checker"}
+	serverOptions  = []string{"Да", "Нет"}
 	checkerOptions = []string{"debank", "rabby"}
 )
 
@@ -119,6 +120,13 @@ func SelectChecker(message string) (string, error) {
 	return baseSelect(message, append(checkerOptions, backOption))
 }
 
+func SelectServer(message string) (string, error) {
+	if message == "" {
+		message = "Нужен ли сервер? (y/n)"
+	}
+	return baseSelect(message, append(serverOptions, backOption))
+}
+
 // SelectAmount prompts the user to enter a token amount.
 //
 // Parameters:
@@ -164,24 +172,4 @@ func SelectNumber(message string) (int, error) {
 	}
 	number, err := inputNumber(message)
 	return int(number), err
-}
-
-// SelectFilePath prompts the user to enter a file path.
-//
-// Parameters:
-// - message: optional custom prompt message
-//
-// Returns:
-// - string: entered file path
-// - error: if input fails
-func SelectFilePath(message string) (string, error) {
-	if message == "" {
-		message = "Введите путь к файлу:"
-	}
-	var path string
-	prompt := &survey.Input{Message: message}
-	if err := survey.AskOne(prompt, &path); err != nil {
-		return path, errors.Wrap(errors.ErrSelection, err.Error())
-	}
-	return path, nil
 }

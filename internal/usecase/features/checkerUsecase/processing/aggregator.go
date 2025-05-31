@@ -4,20 +4,23 @@ import (
 	"chief-checker/internal/service/checkers/checkerModels/commonModels"
 	"chief-checker/internal/usecase/features/checkerUsecase/interfaces"
 	"chief-checker/internal/usecase/features/checkerUsecase/types"
+	"chief-checker/pkg/logger"
 	"sync"
 	"sync/atomic"
 )
 
 type DataAggregatorImpl struct {
-	tokenCache   interfaces.TokenCache
-	minUsdAmount float64
-	statsCounter atomic.Int32
+	tokenCache       interfaces.TokenCache
+	accountCacheData interfaces.AccountStatCache
+	minUsdAmount     float64
+	statsCounter     atomic.Int32
 }
 
 func NewDataAggregator(minUsdAmount float64) interfaces.DataAggregator {
 	return &DataAggregatorImpl{
-		tokenCache:   newTokenCache(),
-		minUsdAmount: minUsdAmount,
+		tokenCache:       newTokenCache(),
+		accountCacheData: newAccountStatCache(),
+		minUsdAmount:     minUsdAmount,
 	}
 }
 
@@ -50,12 +53,18 @@ func (a *DataAggregatorImpl) AggregateAccountData(address string, data *types.Ra
 
 	wg.Wait()
 
-	return &types.AggregatedData{
+	aggrData := &types.AggregatedData{
 		Address:      address,
 		TotalBalance: data.TotalBalance,
 		ChainData:    chainData,
 		ProjectData:  projectData,
-	}, nil
+	}
+
+	if err := a.accountCacheData.Update(address, aggrData); err != nil {
+		logger.GlobalLogger.Debugf("failed to save accoun data to cache: %v", err)
+	}
+
+	return aggrData, nil
 }
 
 func (a *DataAggregatorImpl) projectDataAggregate(data []*commonModels.ProjectAssets) []*types.ProjectInfo {
@@ -83,7 +92,7 @@ func (a *DataAggregatorImpl) projectDataAggregate(data []*commonModels.ProjectAs
 			}
 			projectTokens = append(projectTokens, tokenInfo)
 
-			a.tokenCache.Update(token.Symbol, token.Amount, usdValue)
+			a.tokenCache.Update(tokenInfo)
 		}
 
 		if len(projectTokens) > 0 {
@@ -119,7 +128,7 @@ func (a *DataAggregatorImpl) chainAggregate(data map[string][]*types.TokenChainI
 			}
 			chainTokens = append(chainTokens, tokenInfo)
 
-			a.tokenCache.Update(token.Symbol, token.Amount, token.UsdValue)
+			a.tokenCache.Update(tokenInfo)
 		}
 		if len(chainTokens) > 0 {
 			chainData[chain] = chainTokens
@@ -143,53 +152,7 @@ func (a *DataAggregatorImpl) GetGlobalStats() *types.GlobalStats {
 	}
 }
 
-type tokenCache struct {
-	cache map[string]*types.TokenInfo
-	mu    sync.RWMutex
-}
+func (a *DataAggregatorImpl) GetAllStats() map[string]*types.AggregatedData {
+	return a.accountCacheData.GetAllStats()
 
-func newTokenCache() interfaces.TokenCache {
-	return &tokenCache{
-		cache: make(map[string]*types.TokenInfo),
-	}
-}
-
-func (c *tokenCache) Update(symbol string, amount, usdValue float64) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if info, exists := c.cache[symbol]; exists {
-		info.Amount += amount
-		info.UsdValue += usdValue
-	} else {
-		c.cache[symbol] = &types.TokenInfo{
-			Symbol:   symbol,
-			Amount:   amount,
-			UsdValue: usdValue,
-		}
-	}
-}
-
-func (c *tokenCache) Get(symbol string) *types.TokenInfo {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.cache[symbol]
-}
-
-func (c *tokenCache) GetAll() map[string]*types.TokenInfo {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	result := make(map[string]*types.TokenInfo, len(c.cache))
-	for k, v := range c.cache {
-		result[k] = &types.TokenInfo{
-			Symbol:   v.Symbol,
-			Amount:   v.Amount,
-			UsdValue: v.UsdValue,
-			Contract: v.Contract,
-			Chain:    v.Chain,
-			Price:    v.Price,
-		}
-	}
-	return result
 }
